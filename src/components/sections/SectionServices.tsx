@@ -1,3 +1,4 @@
+'use client';
 import { useTranslations } from 'next-intl';
 import FadeIn from '@/components/ui/FadeIn';
 

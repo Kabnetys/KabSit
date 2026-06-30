@@ -13,11 +13,6 @@ export default function HomePage(): JSX.Element {
   return (
     <>
       <SectionHero />
-      <SectionServices />
-      <SectionMethod />
-      <SectionAppMockup />
-      <SectionTeam />
-      <SectionContact />
     </>
   );
 }
