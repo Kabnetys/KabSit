@@ -1,0 +1,54 @@
+{
+  "meta": { "description": "Custom development for small businesses. Business apps, websites and automation." },
+  "nav": { "services": "Services", "method": "Method", "team": "Team", "contact": "Contact" },
+  "hero": {
+    "headline": "Business tools,\nnot patchwork.",
+    "subline": "Custom development for small and mid-sized businesses that want solutions built for them.",
+    "cta_primary": "Start a project",
+    "cta_secondary": "Our services"
+  },
+  "services": {
+    "label": "Services",
+    "title": "What we build for you",
+    "items": [
+      { "id": "apps", "icon": "cpu", "title": "Business apps", "desc": "Multi-user, secure, scalable. CRM, quotes, scheduling, inventory — built to fit." },
+      { "id": "web", "icon": "globe", "title": "Websites", "desc": "Showcase, client portal, admin panel. Fast, secure, no hacked-together CMS." },
+      { "id": "automation", "icon": "zap", "title": "Automation", "desc": "Excel, Outlook, business software — we connect what doesn't talk. Zero re-entry." }
+    ]
+  },
+  "method": {
+    "label": "Method",
+    "title": "Four steps. Zero surprises.",
+    "steps": [
+      { "n": "01", "title": "Field exchange", "desc": "We ask the right questions before writing a single line of code. We prefer starting with an on-site visit." },
+      { "n": "02", "title": "Design & validation", "desc": "We model the solution with you. Every screen validated before development." },
+      { "n": "03", "title": "Iterative development", "desc": "Deliveries every 1–2 weeks. You test and steer priorities." },
+      { "n": "04", "title": "Delivery", "desc": "Go-live, team training, ongoing support." }
+    ]
+  },
+  "team": {
+    "label": "The team",
+    "title": "Two profiles. Full spectrum.",
+    "members": [
+      { "id": "anthony", "name": "Anthony Bonjour", "role": "CEO · Co-founder", "quote": "Network, infrastructure, dev, cybersecurity — I step in where tech makes the difference.", "skills": ["Network N1/N2", "SI Architecture", "Cybersecurity", "C#", "SQL"] },
+      { "id": "kyllian", "name": "Kyllian Bletrix", "role": "President · Co-founder", "quote": "Code, teach, build — that's what gets me out of bed.", "skills": ["Laravel", "C# / OOP", "SQL", "Power BI", "Git"] }
+    ]
+  },
+  "mockup": {
+    "label": "Applications",
+    "title": "Interfaces that\nwork for you",
+    "desc": "Every application is built around your business. Clear interface, reliable data, zero unnecessary training.",
+    "features": ["Multi-user", "Secure", "Scalable", "Tailor-made"]
+  },
+  "contact": {
+    "label": "Contact",
+    "title": "Let's talk about your project",
+    "fields": { "name": "Your name", "email": "Your email", "company": "Your company", "message": "Describe your project", "submit": "Send" },
+    "success": "Message sent. We'll get back to you within 24h."
+  },
+  "footer": {
+    "tagline": "Business tools, not patchwork.",
+    "legal": "© 2026 KabNetys. All rights reserved.",
+    "location": "École-Valentin, Franche-Comté, France"
+  }
+}

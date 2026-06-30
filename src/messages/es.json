@@ -1,0 +1,54 @@
+{
+  "meta": { "description": "Desarrollo a medida para pymes. Aplicaciones de negocio, sitios web y automatización." },
+  "nav": { "services": "Servicios", "method": "Método", "team": "Equipo", "contact": "Contacto" },
+  "hero": {
+    "headline": "Herramientas profesionales,\nno parches.",
+    "subline": "Desarrollo a medida para pymes que quieren soluciones que realmente les correspondan.",
+    "cta_primary": "Iniciar un proyecto",
+    "cta_secondary": "Nuestros servicios"
+  },
+  "services": {
+    "label": "Servicios",
+    "title": "Lo que construimos para usted",
+    "items": [
+      { "id": "apps", "icon": "cpu", "title": "Apps de negocio", "desc": "Multiusuario, segura, escalable. CRM, presupuestos, planificación, inventario — a medida." },
+      { "id": "web", "icon": "globe", "title": "Sitios web", "desc": "Escaparate, portal cliente, panel admin. Rápidos, seguros, sin CMS improvisado." },
+      { "id": "automation", "icon": "zap", "title": "Automatización", "desc": "Excel, Outlook, software de negocio — conectamos lo que no se comunica. Cero reingreso." }
+    ]
+  },
+  "method": {
+    "label": "Método",
+    "title": "Cuatro pasos. Sin sorpresas.",
+    "steps": [
+      { "n": "01", "title": "Intercambio en terreno", "desc": "Hacemos las preguntas correctas antes de escribir una línea de código. Preferimos empezar con una visita in situ." },
+      { "n": "02", "title": "Diseño y validación", "desc": "Modelamos la solución contigo. Cada pantalla validada antes del desarrollo." },
+      { "n": "03", "title": "Desarrollo iterativo", "desc": "Entregas cada 1–2 semanas. Tú pruebas y orientas las prioridades." },
+      { "n": "04", "title": "Entrega", "desc": "Puesta en producción, formación del equipo, acompañamiento continuo." }
+    ]
+  },
+  "team": {
+    "label": "El equipo",
+    "title": "Dos perfiles. Espectro completo.",
+    "members": [
+      { "id": "anthony", "name": "Anthony Bonjour", "role": "Director General · Cofundador", "quote": "Red, infraestructura, desarrollo, ciberseguridad — intervengo donde la técnica marca la diferencia.", "skills": ["Red N1/N2", "Arquitectura SI", "Ciberseguridad", "C#", "SQL"] },
+      { "id": "kyllian", "name": "Kyllian Bletrix", "role": "Presidente · Cofundador", "quote": "Codificar, transmitir, emprender — eso es lo que me hace levantarme cada mañana.", "skills": ["Laravel", "C# / POO", "SQL", "Power BI", "Git"] }
+    ]
+  },
+  "mockup": {
+    "label": "Aplicaciones",
+    "title": "Interfaces que\ntrabajan para ti",
+    "desc": "Cada aplicación está construida alrededor de tu negocio. Interfaz clara, datos fiables, cero formación innecesaria.",
+    "features": ["Multiusuario", "Segura", "Escalable", "A medida"]
+  },
+  "contact": {
+    "label": "Contacto",
+    "title": "Hablemos de tu proyecto",
+    "fields": { "name": "Tu nombre", "email": "Tu email", "company": "Tu empresa", "message": "Describe tu proyecto", "submit": "Enviar" },
+    "success": "Mensaje enviado. Te respondemos en 24h."
+  },
+  "footer": {
+    "tagline": "Herramientas profesionales, no parches.",
+    "legal": "© 2026 KabNetys. Todos los derechos reservados.",
+    "location": "École-Valentin, Franche-Comté, Francia"
+  }
+}

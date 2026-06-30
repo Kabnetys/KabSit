@@ -1,0 +1,54 @@
+{
+  "meta": { "description": "Développement sur mesure pour TPE et PME. Applications métier, sites internet et automatisation." },
+  "nav": { "services": "Services", "method": "Méthode", "team": "L'équipe", "contact": "Contact" },
+  "hero": {
+    "headline": "Des outils métier,\npas des bricolages.",
+    "subline": "Développement sur mesure pour les TPE et PME qui veulent enfin des solutions qui leur ressemblent.",
+    "cta_primary": "Démarrer un projet",
+    "cta_secondary": "Voir nos services"
+  },
+  "services": {
+    "label": "Services",
+    "title": "Ce qu'on construit pour vous",
+    "items": [
+      { "id": "apps", "icon": "cpu", "title": "Applications métier", "desc": "Multi-utilisateurs, sécurisée, évolutive. Suivi clients, devis, planning, stock — sur mesure." },
+      { "id": "web", "icon": "globe", "title": "Sites internet", "desc": "Vitrine, portail client, espace admin. Rapides, sécurisés, sans CMS bricolé." },
+      { "id": "automation", "icon": "zap", "title": "Automatisation", "desc": "Excel, Outlook, logiciels métier — on connecte ce qui ne se parle pas. Zéro ressaisie." }
+    ]
+  },
+  "method": {
+    "label": "Méthode",
+    "title": "Quatre étapes. Zéro surprise.",
+    "steps": [
+      { "n": "01", "title": "Échange terrain", "desc": "On pose les bonnes questions avant d'écrire la moindre ligne de code. On préfère commencer par une présence physique." },
+      { "n": "02", "title": "Conception & validation", "desc": "Modélisation de la solution avec vous. Chaque écran validé avant le développement." },
+      { "n": "03", "title": "Développement itératif", "desc": "Livraisons toutes les 1 à 2 semaines. Vous testez et orientez les priorités." },
+      { "n": "04", "title": "Livraison", "desc": "Mise en production, formation de vos équipes, accompagnement continu." }
+    ]
+  },
+  "team": {
+    "label": "L'équipe",
+    "title": "Deux profils. Un spectre complet.",
+    "members": [
+      { "id": "anthony", "name": "Anthony Bonjour", "role": "Directeur Général · Co-fondateur", "quote": "Réseau, infrastructure, développement, cybersécurité — j'interviens là où la technique fait la différence.", "skills": ["Réseau N1/N2", "Infrastructure SI", "Cybersécurité", "C#", "SQL"] },
+      { "id": "kyllian", "name": "Kyllian Bletrix", "role": "Président · Co-fondateur", "quote": "Coder, transmettre, entreprendre — c'est ce qui me fait me lever chaque matin.", "skills": ["Laravel", "C# / POO", "SQL", "Power BI", "Git"] }
+    ]
+  },
+  "mockup": {
+    "label": "Applications",
+    "title": "Des interfaces qui\ntravaillent pour vous",
+    "desc": "Chaque application est conçue autour de votre métier. Interface claire, données fiables, zéro formation inutile.",
+    "features": ["Multi-utilisateurs", "Sécurisée", "Évolutive", "Sur mesure"]
+  },
+  "contact": {
+    "label": "Contact",
+    "title": "Parlons de votre projet",
+    "fields": { "name": "Votre nom", "email": "Votre email", "company": "Votre société", "message": "Décrivez votre projet", "submit": "Envoyer" },
+    "success": "Message envoyé. On vous répond sous 24h."
+  },
+  "footer": {
+    "tagline": "Des outils métier, pas des bricolages.",
+    "legal": "© 2026 KabNetys. Tous droits réservés.",
+    "location": "École-Valentin, Franche-Comté, France"
+  }
+}
