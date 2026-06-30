@@ -4,12 +4,16 @@ import { unstable_setRequestLocale } from 'next-intl/server';
 import { Space_Grotesk, Inter, JetBrains_Mono } from 'next/font/google';
 import dynamicImport from 'next/dynamic';
 import Script from 'next/script';
+import { notFound } from 'next/navigation';
 import NavBar from '@/components/ui/NavBar';
 import Footer from '@/components/layout/Footer';
 import '@/app/globals.css';
 
+const LOCALES = ['fr', 'en', 'es'];
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function loadMessages(locale: string): Promise<any> {
+  if (!LOCALES.includes(locale)) notFound();
   return (await import(`../../messages/${locale}.json`)).default;
 }
 
