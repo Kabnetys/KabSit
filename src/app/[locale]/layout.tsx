@@ -91,7 +91,7 @@ export default async function LocaleLayout({
           dangerouslySetInnerHTML={{ __html: JSON_LD }}
           strategy="afterInteractive"
         />
-        <NextIntlClientProvider messages={messages}>
+        <NextIntlClientProvider locale={locale} messages={messages} timeZone="Europe/Paris" now={new Date()}>
           <WebGLBackground />
           <NavBar />
           <main id="main-content" className="relative" style={{ zIndex: 1 }}>
