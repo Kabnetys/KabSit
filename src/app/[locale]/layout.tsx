@@ -1,12 +1,17 @@
 import type { Metadata } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
-import { getMessages, getTranslations, unstable_setRequestLocale } from 'next-intl/server';
+import { unstable_setRequestLocale } from 'next-intl/server';
 import { Space_Grotesk, Inter, JetBrains_Mono } from 'next/font/google';
 import dynamicImport from 'next/dynamic';
 import Script from 'next/script';
 import NavBar from '@/components/ui/NavBar';
 import Footer from '@/components/layout/Footer';
 import '@/app/globals.css';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function loadMessages(locale: string): Promise<any> {
+  return (await import(`../../messages/${locale}.json`)).default;
+}
 
 const WebGLBackground = dynamicImport(() => import('@/components/canvas/WebGLBackground'), { ssr: false });
 
@@ -34,10 +39,11 @@ export async function generateMetadata({
 }: {
   params: { locale: string };
 }): Promise<Metadata> {
-  const t = await getTranslations({ locale, namespace: 'meta' });
+  const messages = await loadMessages(locale);
+  const meta = messages['meta'] as Record<string, string> | undefined;
   return {
     title: { default: 'KabNetys', template: '%s | KabNetys' },
-    description: t('description'),
+    description: meta?.['description'] ?? '',
     metadataBase: new URL('https://kabnetys.fr'),
     alternates: {
       canonical: `/${locale}`,
@@ -68,7 +74,7 @@ export default async function LocaleLayout({
   params: { locale: string };
 }) {
   unstable_setRequestLocale(locale);
-  const messages = await getMessages();
+  const messages = await loadMessages(locale);
   return (
     <html
       lang={locale}

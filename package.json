@@ -10,6 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "autoprefixer": "^10.5.2",
     "framer-motion": "^11.3.0",
     "next": "14.2.29",
     "next-intl": "^3.17.0",
