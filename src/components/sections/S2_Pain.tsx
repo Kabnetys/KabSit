@@ -91,7 +91,7 @@ export default function S2_Pain(): JSX.Element {
   }, []);
 
   return (
-    <div ref={sectionRef} className="relative w-full h-screen overflow-hidden flex items-center justify-center">
+    <div ref={sectionRef} id="pain-section" className="relative w-full h-screen overflow-hidden flex items-center justify-center">
 
       {/* Static red radial base */}
       <div

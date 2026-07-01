@@ -5,6 +5,7 @@ import S4_AI from '@/components/sections/S4_AI';
 import S5_Team from '@/components/sections/S5_Team';
 import S6_Method from '@/components/sections/S6_Method';
 import S7_Contact from '@/components/sections/S7_Contact';
+import TransitionLayer from '@/components/ui/TransitionLayer';
 
 export function generateStaticParams() {
   return [{ locale: 'fr' }, { locale: 'en' }, { locale: 'es' }];
@@ -13,6 +14,7 @@ export function generateStaticParams() {
 export default function HomePage(): JSX.Element {
   return (
     <>
+      <TransitionLayer />
       <SectionHero />
       <S2_Pain />
       <S3_Services />
