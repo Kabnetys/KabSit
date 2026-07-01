@@ -1,98 +1,173 @@
 /**
- * LandscapeScene — reproduction fidèle de l'esthétique hubtown.co.in
+ * LandscapeScene — architecture fidèle à hubtown.co.in
  *
- * Ce qui fait la différence visuellement :
- * 1. UnrealBloomPass → le beacon brille vraiment (pas juste un point)
- * 2. Terrain à fort relief (amplitude 35u) lisible depuis le ciel
- * 3. Caméra top-down au départ → tilt progressif au scroll
- * 4. Ombres fortes + lune directionnelle puissante
- * 5. Palette stricte : #020A19 fond / #D5E0FF toute la lumière
+ * Sources : analyse du code source hubtown (_nuxt/CBIW8Dul.js)
+ *
+ * Techniques confirmées par le source :
+ * - Terrain : PlaneGeometry + displacementMap + normalMap (texture-based)
+ * - FOV setFocalLength(50) → ~38° (téléobjectif, pas grand-angle)
+ * - Fog gradient 3 couches : top/middle/bottom (shader custom)
+ * - Camera pivot souris : pointerLerpSpeed 0.032
+ * - UnrealBloomPass piloté par GSAP (strength/threshold/radius par chapitre)
+ * - GSAP ScrollTrigger scrub → sequence.position (leur architecture exacte)
+ * - Palette : #020A19 fond + #D5E0FF toute la lumière
  */
 
 import * as THREE from 'three';
 import gsap from 'gsap';
+import ScrollTrigger from 'gsap/ScrollTrigger';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 
+gsap.registerPlugin(ScrollTrigger);
+
 // ─── Palette ──────────────────────────────────────────────────────────────────
-const BG    = 0x020a19;
-const LIGHT = new THREE.Color(0xd5e0ff);
+const BG_COLOR   = new THREE.Color(0x020a19);
+const LIGHT_COL  = new THREE.Color(0xd5e0ff);
 
-// Terrain : tons très sombres — la lumière fait tout le relief
-const T_LOW  = new THREE.Color(0x040a14);
-const T_MID  = new THREE.Color(0x081220);
-const T_HIGH = new THREE.Color(0x0d1c32);
+// ─── Génération des textures en Canvas (remplace square-displacement.png) ────
+/**
+ * Crée une heightmap 512×512 par FBM Perlin, retourne CanvasTexture.
+ * Hubtown charge square-displacement.png depuis leur CDN —
+ * on génère l'équivalent procéduralement.
+ */
+function makeDisplacementTexture(): THREE.CanvasTexture {
+  const SIZE = 512;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = SIZE;
+  const ctx = canvas.getContext('2d')!;
+  const img = ctx.createImageData(SIZE, SIZE);
 
-// ─── Bruit Perlin-like (gradient noise sans artefacts de grille) ──────────────
-function fade(t: number): number { return t * t * t * (t * (t * 6 - 15) + 10); }
-function lerp(a: number, b: number, t: number): number { return a + (b - a) * t; }
-
-function grad(hash: number, x: number, y: number): number {
-  const h = hash & 3;
-  const u = h < 2 ? x : y;
-  const v = h < 2 ? y : x;
-  return ((h & 1) ? -u : u) + ((h & 2) ? -v : v);
-}
-
-const P: number[] = [];
-for (let i = 0; i < 256; i++) P[i] = i;
-for (let i = 255; i > 0; i--) {
-  const j = Math.floor(Math.random() * (i + 1));
-  [P[i], P[j]] = [P[j]!, P[i]!];
-}
-const PERM = [...P, ...P];
-
-function pnoise(x: number, y: number): number {
-  const X = Math.floor(x) & 255, Y = Math.floor(y) & 255;
-  const xf = x - Math.floor(x), yf = y - Math.floor(y);
-  const u = fade(xf), v = fade(yf);
-  const a  = PERM[X]!     + Y, b  = PERM[X + 1]! + Y;
-  return lerp(
-    lerp(grad(PERM[a]!,     xf,     yf),     grad(PERM[b]!,     xf - 1, yf),     u),
-    lerp(grad(PERM[a + 1]!, xf,     yf - 1), grad(PERM[b + 1]!, xf - 1, yf - 1), u),
-    v,
-  );
-}
-
-function fbm(x: number, y: number): number {
-  let v = 0, a = 0.5, f = 1.0, norm = 0;
-  for (let i = 0; i < 6; i++) {
-    v += a * pnoise(x * f, y * f); norm += a; a *= 0.48; f *= 2.07;
+  // Perlin-like gradient noise
+  const P: number[] = Array.from({ length: 256 }, (_, i) => i);
+  for (let i = 255; i > 0; i--) {
+    const j = Math.floor((i / 255) * 41651 + 19) % (i + 1);
+    [P[i], P[j]] = [P[j]!, P[i]!];
   }
-  return v / norm;
+  const PERM = [...P, ...P];
+
+  function fade(t: number): number { return t * t * t * (t * (t * 6 - 15) + 10); }
+  function grad(h: number, x: number, y: number): number {
+    const g = h & 3;
+    return ((g & 1) ? x : -x) + ((g & 2) ? y : -y);
+  }
+  function pn(x: number, y: number): number {
+    const xi = Math.floor(x) & 255, yi = Math.floor(y) & 255;
+    const xf = x - Math.floor(x), yf = y - Math.floor(y);
+    const u = fade(xf), v = fade(yf);
+    const aa = PERM[xi]! + yi, ab = PERM[xi]! + yi + 1;
+    const ba = PERM[xi + 1]! + yi, bb = PERM[xi + 1]! + yi + 1;
+    return (
+      u * v * grad(PERM[bb]!, xf - 1, yf - 1) +
+      (1 - u) * v * grad(PERM[ab]!, xf, yf - 1) +
+      u * (1 - v) * grad(PERM[ba]!, xf - 1, yf) +
+      (1 - u) * (1 - v) * grad(PERM[aa]!, xf, yf)
+    );
+  }
+  function fbm(x: number, y: number): number {
+    let v = 0, a = 1.0, f = 1.0, n = 0;
+    for (let i = 0; i < 7; i++) { v += a * pn(x * f, y * f); n += a; a *= 0.48; f *= 2.09; }
+    return v / n;
+  }
+
+  for (let y = 0; y < SIZE; y++) {
+    for (let x = 0; x < SIZE; x++) {
+      const nx = x / SIZE * 3 + 1.7;
+      const ny = y / SIZE * 3 + 0.9;
+      let h = fbm(nx, ny);
+      // Ridgeline effect (accentue les crêtes — caractéristique hubtown)
+      const ridge = 1 - Math.abs(fbm(nx * 0.6 + 5, ny * 0.6 + 3));
+      h = h * 0.6 + ridge * ridge * 0.4;
+      // Normalisé 0-255
+      const v = Math.max(0, Math.min(255, (h * 0.5 + 0.5) * 255));
+      const i = (y * SIZE + x) * 4;
+      img.data[i] = v; img.data[i + 1] = v; img.data[i + 2] = v; img.data[i + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  return tex;
+}
+
+/**
+ * Calcule une normal map à partir de la heightmap (sobel filter).
+ * Hubtown charge terrain_normal.jpg — on l'approxime depuis la displacement map.
+ */
+function makeNormalTexture(dispTex: THREE.CanvasTexture): THREE.CanvasTexture {
+  const src = dispTex.source.data as HTMLCanvasElement;
+  const SIZE = src.width;
+  const srcCtx = src.getContext('2d')!;
+  const srcData = srcCtx.getImageData(0, 0, SIZE, SIZE);
+
+  const nCanvas = document.createElement('canvas');
+  nCanvas.width = nCanvas.height = SIZE;
+  const nCtx = nCanvas.getContext('2d')!;
+  const nImg = nCtx.createImageData(SIZE, SIZE);
+
+  const h = (x: number, y: number): number => {
+    const xi = Math.max(0, Math.min(SIZE - 1, x));
+    const yi = Math.max(0, Math.min(SIZE - 1, y));
+    return (srcData.data[(yi * SIZE + xi) * 4]! / 255) * 2 - 1;
+  };
+
+  for (let y = 0; y < SIZE; y++) {
+    for (let x = 0; x < SIZE; x++) {
+      const strength = 4.0;
+      const dx = (h(x - 1, y) - h(x + 1, y)) * strength;
+      const dy = (h(x, y - 1) - h(x, y + 1)) * strength;
+      const nx = dx * 0.5 + 0.5;
+      const ny = dy * 0.5 + 0.5;
+      const nz = 1.0;
+      const i = (y * SIZE + x) * 4;
+      nImg.data[i]     = Math.round(nx * 255);
+      nImg.data[i + 1] = Math.round(ny * 255);
+      nImg.data[i + 2] = Math.round(nz * 255);
+      nImg.data[i + 3] = 255;
+    }
+  }
+  nCtx.putImageData(nImg, 0, 0);
+  const tex = new THREE.CanvasTexture(nCanvas);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  return tex;
 }
 
 // ─── Chapitres scroll ─────────────────────────────────────────────────────────
+// Architecture hubtown : GSAP ScrollTrigger scrub → state → position caméra
 interface Chapter {
-  p: number;
-  r: number;       // rayon orbital
-  theta: number;   // azimut (rotation horizontale)
-  camY: number;    // hauteur
-  tilt: number;    // inclinaison du lookAt (0 = regard vers centre, 1 = vers horizon)
-  fogD: number;
-  beaI: number;
-  moonI: number;
-  stars: number;
-  bloom: number;   // force du bloom
+  p:     number;
+  // Position caméra (orbitale)
+  r:     number;
+  theta: number;
+  camY:  number;
+  lookY: number;   // hauteur du lookAt
+  // Post-fx (Theatre.js-equivalent)
+  bloomStr:   number;
+  bloomThr:   number;
+  bloomRad:   number;
+  // Lumières
+  moonI:      number;
+  beaI:       number;
+  // Fog (inspiré du fog gradient hubtown)
+  fogDensity: number;
+  // Étoiles
+  stars:      number;
 }
 
 const CHAPTERS: Chapter[] = [
-  { p: 0.00, r: 10,  theta: 0.00, camY: 160, tilt: 0.0, fogD: 0.0003, beaI:  8, moonI: 2.0, stars: 0.0, bloom: 0.4 },
-  { p: 0.17, r: 40,  theta: 0.20, camY: 130, tilt: 0.1, fogD: 0.0005, beaI: 16, moonI: 2.2, stars: 0.1, bloom: 0.5 },
-  { p: 0.35, r: 80,  theta: 0.45, camY: 100, tilt: 0.3, fogD: 0.0008, beaI: 24, moonI: 2.4, stars: 0.3, bloom: 0.7 },
-  { p: 0.52, r: 110, theta: 0.75, camY:  72, tilt: 0.5, fogD: 0.0015, beaI: 36, moonI: 2.0, stars: 0.6, bloom: 1.0 },
-  { p: 0.68, r: 120, theta: 1.05, camY:  55, tilt: 0.6, fogD: 0.0012, beaI: 28, moonI: 2.3, stars: 0.8, bloom: 0.9 },
-  { p: 0.84, r: 115, theta: 1.30, camY:  42, tilt: 0.7, fogD: 0.0009, beaI: 20, moonI: 2.6, stars: 0.9, bloom: 0.7 },
-  { p: 1.00, r: 105, theta: 1.55, camY:  34, tilt: 0.8, fogD: 0.0007, beaI: 14, moonI: 2.8, stars: 1.0, bloom: 0.6 },
+  { p:0.00, r:  8, theta:0.00, camY:180, lookY:0, bloomStr:0.3, bloomThr:0.88, bloomRad:0.4, moonI:1.8, beaI: 8, fogDensity:0.0003, stars:0.0 },
+  { p:0.17, r: 35, theta:0.22, camY:145, lookY:2, bloomStr:0.5, bloomThr:0.82, bloomRad:0.5, moonI:2.1, beaI:16, fogDensity:0.0005, stars:0.1 },
+  { p:0.35, r: 75, theta:0.50, camY:110, lookY:3, bloomStr:0.7, bloomThr:0.78, bloomRad:0.5, moonI:2.4, beaI:26, fogDensity:0.0008, stars:0.3 },
+  { p:0.52, r:105, theta:0.78, camY: 78, lookY:4, bloomStr:1.1, bloomThr:0.72, bloomRad:0.6, moonI:2.0, beaI:38, fogDensity:0.0015, stars:0.6 },
+  { p:0.68, r:115, theta:1.08, camY: 58, lookY:4, bloomStr:0.9, bloomThr:0.75, bloomRad:0.6, moonI:2.3, beaI:30, fogDensity:0.0011, stars:0.8 },
+  { p:0.84, r:110, theta:1.32, camY: 44, lookY:3, bloomStr:0.7, bloomThr:0.80, bloomRad:0.5, moonI:2.6, beaI:20, fogDensity:0.0008, stars:0.9 },
+  { p:1.00, r:100, theta:1.58, camY: 35, lookY:2, bloomStr:0.5, bloomThr:0.84, bloomRad:0.4, moonI:2.9, beaI:14, fogDensity:0.0006, stars:1.0 },
 ];
 
-const state = {
-  r: 10, theta: 0, camY: 160, tilt: 0,
-  fogD: 0.0003, beaI: 8, moonI: 2.0, stars: 0, bloom: 0.4,
-};
+const state = { ...CHAPTERS[0]!, p: 0 };
 
-function seekChapter(progress: number): void {
+function seekTo(progress: number): void {
   let lo = CHAPTERS[0]!, hi = CHAPTERS[CHAPTERS.length - 1]!;
   for (let i = 0; i < CHAPTERS.length - 1; i++) {
     if (progress >= CHAPTERS[i]!.p && progress <= CHAPTERS[i + 1]!.p) {
@@ -100,87 +175,41 @@ function seekChapter(progress: number): void {
     }
   }
   const span = hi.p - lo.p;
-  const t    = span < 0.0001 ? 0 : (progress - lo.p) / span;
+  const t    = span < 1e-5 ? 0 : (progress - lo.p) / span;
   const e    = t * t * (3 - 2 * t);
   const L = (a: number, b: number): number => a + (b - a) * e;
+
   gsap.to(state, {
-    duration:  1.4,
-    ease:      'power2.inOut',
-    r:     L(lo.r,     hi.r),
-    theta: L(lo.theta, hi.theta),
-    camY:  L(lo.camY,  hi.camY),
-    tilt:  L(lo.tilt,  hi.tilt),
-    fogD:  L(lo.fogD,  hi.fogD),
-    beaI:  L(lo.beaI,  hi.beaI),
-    moonI: L(lo.moonI, hi.moonI),
-    stars: L(lo.stars, hi.stars),
-    bloom: L(lo.bloom, hi.bloom),
+    duration:  1.2,
+    ease:      'sine.inOut',
+    r:          L(lo.r,          hi.r),
+    theta:      L(lo.theta,      hi.theta),
+    camY:       L(lo.camY,       hi.camY),
+    lookY:      L(lo.lookY,      hi.lookY),
+    bloomStr:   L(lo.bloomStr,   hi.bloomStr),
+    bloomThr:   L(lo.bloomThr,   hi.bloomThr),
+    bloomRad:   L(lo.bloomRad,   hi.bloomRad),
+    moonI:      L(lo.moonI,      hi.moonI),
+    beaI:       L(lo.beaI,       hi.beaI),
+    fogDensity: L(lo.fogDensity, hi.fogDensity),
+    stars:      L(lo.stars,      hi.stars),
     overwrite: true,
   });
 }
 
-// ─── Terrain ──────────────────────────────────────────────────────────────────
-function buildTerrain(): THREE.Mesh {
-  const SEGS = 300, SIZE = 250;
-  const geo  = new THREE.PlaneGeometry(SIZE, SIZE, SEGS, SEGS);
-  geo.rotateX(-Math.PI / 2);
-
-  const pos    = geo.attributes['position'] as THREE.BufferAttribute;
-  const n      = pos.count;
-  const colors = new Float32Array(n * 3);
-  const c      = new THREE.Color();
-
-  for (let i = 0; i < n; i++) {
-    const wx = pos.getX(i), wz = pos.getZ(i);
-    const nx = wx / SIZE * 2.8 + 3.0;
-    const nz = wz / SIZE * 2.8 + 1.5;
-
-    // Terrain à fort relief — FBM Perlin 6 octaves
-    const h0 = fbm(nx, nz);
-    // Amplification des crêtes (ridges)
-    const ridge = 1 - Math.abs(fbm(nx * 0.5 + 5, nz * 0.5 + 2));
-    let h = h0 * 22 + ridge * ridge * 14;
-
-    // Légère cuvette au centre (zone calme pour le beacon)
-    const d  = Math.sqrt(wx * wx + wz * wz) / (SIZE * 0.45);
-    h       -= Math.max(0, 1 - d) * 5;
-
-    pos.setY(i, h);
-
-    // Couleur vertex : sombre absolu → bleu nuit profond sur les hauteurs
-    const t = Math.max(0, Math.min(1, (h + 2) / 26));
-    c.lerpColors(T_LOW, t < 0.5 ? T_MID : T_HIGH, t);
-    colors[i * 3] = c.r; colors[i * 3 + 1] = c.g; colors[i * 3 + 2] = c.b;
-  }
-
-  pos.needsUpdate = true;
-  geo.computeVertexNormals();
-  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-  const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
-    vertexColors: true,
-    roughness: 0.85,
-    metalness: 0.08,
-    fog: true,
-  }));
-  mesh.receiveShadow = true;
-  mesh.castShadow    = true;
-  return mesh;
-}
-
 // ─── Étoiles ──────────────────────────────────────────────────────────────────
 function buildStars(): THREE.Points {
-  const count = 1600;
+  const count = 1800;
   const pos   = new Float32Array(count * 3);
   for (let i = 0; i < count; i++) {
-    pos[i * 3]     = (Math.random() - 0.5) * 600;
-    pos[i * 3 + 1] = 80 + Math.random() * 280;
-    pos[i * 3 + 2] = (Math.random() - 0.5) * 600;
+    pos[i * 3]     = (Math.random() - 0.5) * 700;
+    pos[i * 3 + 1] = 90 + Math.random() * 310;
+    pos[i * 3 + 2] = (Math.random() - 0.5) * 700;
   }
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
   return new THREE.Points(geo, new THREE.PointsMaterial({
-    color: LIGHT, size: 0.5, sizeAttenuation: true,
+    color: LIGHT_COL, size: 0.48, sizeAttenuation: true,
     transparent: true, opacity: 0, fog: false,
   }));
 }
@@ -196,87 +225,115 @@ export class LandscapeScene {
   private stars:      THREE.Points;
   private moon:       THREE.DirectionalLight;
   private beacon:     THREE.PointLight;
-  private beaconHalo: THREE.Mesh;
+  private beaconGlow: THREE.Mesh;
 
-  private time      = 0;
+  private time       = 0;
   private raf: number | null = null;
-  private mouseX    = 0;
-  private mouseY    = 0;
+
+  // Camera pivot — hubtown : pointerLerpSpeed 0.032
+  private pivotTarget = new THREE.Vector2(0, 0);
+  private pivotCurrent = new THREE.Vector2(0, 0);
+  private readonly PIVOT_SPEED = 0.032;
+
   private beaTarget = new THREE.Vector3(0, 4, 0);
 
   constructor(canvas: HTMLCanvasElement) {
     // ── Renderer ──
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.toneMapping         = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure  = 1.0;
+    this.renderer.toneMappingExposure  = 1.05;
     this.renderer.shadowMap.enabled   = true;
     this.renderer.shadowMap.type      = THREE.PCFSoftShadowMap;
-    this.renderer.setClearColor(BG, 1);
+    this.renderer.setClearColor(BG_COLOR, 1);
 
     // ── Scene ──
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(BG);
-    this.scene.fog         = new THREE.FogExp2(BG, 0.0003);
+    this.scene.background = BG_COLOR.clone();
+    // Fog : distance-based (hubtown utilise aussi un height fog en custom shader —
+    // on approxime avec FogExp2 pour l'instant)
+    this.scene.fog = new THREE.FogExp2(BG_COLOR.getHex(), CHAPTERS[0]!.fogDensity);
 
-    // ── Camera ──
-    this.camera = new THREE.PerspectiveCamera(48, 1, 0.5, 1000);
-    this.camera.position.set(0, 160, 0);
+    // ── Camera — FOV via setFocalLength(50) comme hubtown ──
+    this.camera = new THREE.PerspectiveCamera(45, 1, 0.1, 800);
+    this.camera.setFocalLength(50); // → FOV ~38° en 35mm
+    this.camera.position.set(0, 180, 0);
     this.camera.lookAt(0, 0, 0);
 
-    // ── Post-processing : Bloom ──
+    // ── Post-processing ──
     this.bloomPass = new UnrealBloomPass(
       new THREE.Vector2(window.innerWidth, window.innerHeight),
-      0.4,   // strength
-      0.5,   // radius
-      0.82,  // threshold — seul ce qui est très lumineux brille
+      CHAPTERS[0]!.bloomStr,
+      CHAPTERS[0]!.bloomRad,
+      CHAPTERS[0]!.bloomThr,
     );
-    const renderPass = new RenderPass(this.scene, this.camera);
     this.composer = new EffectComposer(this.renderer);
-    this.composer.addPass(renderPass);
+    this.composer.addPass(new RenderPass(this.scene, this.camera));
     this.composer.addPass(this.bloomPass);
 
-    // ── Terrain ──
-    this.terrain = buildTerrain();
+    // ── Terrain (displacement + normal texture) ──
+    const dispTex = makeDisplacementTexture();
+    const normTex = makeNormalTexture(dispTex);
+
+    const geo = new THREE.PlaneGeometry(280, 280, 300, 300);
+    geo.rotateX(-Math.PI / 2);
+
+    // Couleur unique du terrain : très sombre, la lumière fait le travail
+    const mat = new THREE.MeshStandardMaterial({
+      color:            new THREE.Color(0x0a1525),
+      displacementMap:  dispTex,
+      displacementScale: 32,
+      displacementBias: -8,
+      normalMap:        normTex,
+      normalScale:      new THREE.Vector2(1.5, 1.5),
+      roughness:        0.88,
+      metalness:        0.08,
+      fog:              true,
+    });
+
+    this.terrain = new THREE.Mesh(geo, mat);
+    this.terrain.receiveShadow = true;
+    this.terrain.castShadow    = true;
     this.scene.add(this.terrain);
 
     // ── Étoiles ──
     this.stars = buildStars();
     this.scene.add(this.stars);
 
-    // ── Ambiance ──
-    this.scene.add(new THREE.AmbientLight(0x020810, 0.25));
+    // ── Ambiance (très faible — on veut le contraste) ──
+    this.scene.add(new THREE.AmbientLight(0x010509, 0.3));
 
-    // ── Lune (directionnelle forte — crée les ombres portées) ──
-    this.moon = new THREE.DirectionalLight(LIGHT, 2.0);
-    this.moon.position.set(60, 100, 30);
+    // ── Lune (forte pour générer des ombres portées lisibles) ──
+    this.moon = new THREE.DirectionalLight(LIGHT_COL, CHAPTERS[0]!.moonI);
+    this.moon.position.set(80, 120, 50);
     this.moon.castShadow           = true;
     this.moon.shadow.camera.near   = 1;
-    this.moon.shadow.camera.far    = 500;
-    this.moon.shadow.camera.left   = -160;
-    this.moon.shadow.camera.right  =  160;
-    this.moon.shadow.camera.top    =  160;
-    this.moon.shadow.camera.bottom = -160;
+    this.moon.shadow.camera.far    = 600;
+    this.moon.shadow.camera.left   = -180;
+    this.moon.shadow.camera.right  =  180;
+    this.moon.shadow.camera.top    =  180;
+    this.moon.shadow.camera.bottom = -180;
     this.moon.shadow.mapSize.set(2048, 2048);
-    this.moon.shadow.bias          = -0.001;
+    this.moon.shadow.bias = -0.001;
     this.scene.add(this.moon);
     this.scene.add(this.moon.target);
 
-    // ── Beacon (point light très intense pour déclencher le bloom) ──
-    this.beacon = new THREE.PointLight(LIGHT, 8, 100, 1.5);
+    // ── Beacon — emissive pour déclencher le bloom ──
+    this.beacon = new THREE.PointLight(LIGHT_COL, CHAPTERS[0]!.beaI, 110, 1.4);
     this.beacon.position.set(0, 5, 0);
     this.scene.add(this.beacon);
 
-    // Sphère lumineuse — emissive pour que le bloom la capte
-    const haloMat = new THREE.MeshStandardMaterial({
-      color:           LIGHT,
-      emissive:        LIGHT,
-      emissiveIntensity: 3.0,
-      transparent:     true,
-      opacity:         0.9,
-    });
-    this.beaconHalo = new THREE.Mesh(new THREE.SphereGeometry(0.4, 12, 12), haloMat);
-    this.scene.add(this.beaconHalo);
+    this.beaconGlow = new THREE.Mesh(
+      new THREE.SphereGeometry(0.35, 12, 12),
+      new THREE.MeshStandardMaterial({
+        color:             LIGHT_COL,
+        emissive:          LIGHT_COL,
+        emissiveIntensity: 4.0,
+        transparent:       true,
+        opacity:           0.9,
+      }),
+    );
+    this.scene.add(this.beaconGlow);
   }
 
   setSize(w: number, h: number): void {
@@ -288,12 +345,15 @@ export class LandscapeScene {
   }
 
   setScroll(p: number): void {
-    seekChapter(Math.max(0, Math.min(1, p)));
+    seekTo(Math.max(0, Math.min(1, p)));
   }
 
-  onMouseMove(x: number, y: number): void {
-    this.mouseX = (x / window.innerWidth  - 0.5) * 2;
-    this.mouseY = (y / window.innerHeight - 0.5) * 2;
+  // hubtown pointerLerpSpeed : 0.032 — lerp très lent sur la position souris
+  onMouseMove(clientX: number, clientY: number): void {
+    this.pivotTarget.set(
+      (clientX / window.innerWidth  - 0.5) * 2,
+      (clientY / window.innerHeight - 0.5) * 2,
+    );
   }
 
   start(): void {
@@ -305,45 +365,51 @@ export class LandscapeScene {
   private update(): void {
     this.time += 0.006;
 
-    // Caméra : position orbitale (top-down → oblique selon tilt)
+    // Camera pivot — lerp lent (hubtown pointerLerpSpeed 0.032)
+    this.pivotCurrent.lerp(this.pivotTarget, this.PIVOT_SPEED);
+
+    // Position orbitale
     const cx = state.r * Math.sin(state.theta);
     const cz = state.r * Math.cos(state.theta);
     this.camera.position.set(cx, state.camY, cz);
 
-    // lookAt : tilt=0 → regarde directement en bas, tilt=1 → horizon
-    const lookY  = state.camY * (1 - state.tilt) * -0.3;
-    const lookXZ = state.tilt * 25;
+    // LookAt + pivot souris (très subtil comme hubtown)
     this.camera.lookAt(
-      this.mouseX * 4 + lookXZ * Math.sin(state.theta + Math.PI),
-      lookY + this.mouseY * 2,
-      lookXZ * Math.cos(state.theta + Math.PI),
+      this.pivotCurrent.x * 5,
+      state.lookY + this.pivotCurrent.y * 2.5,
+      0,
     );
 
-    // Fog + lune
-    (this.scene.fog as THREE.FogExp2).density = state.fogD;
+    // Fog
+    (this.scene.fog as THREE.FogExp2).density = state.fogDensity;
+
+    // Lune
     this.moon.intensity = state.moonI;
 
-    // Beacon : Lissajous organique sur le terrain
-    const bx = Math.sin(this.time * 0.27) * 55 + Math.sin(this.time * 0.15) * 25;
-    const bz = Math.cos(this.time * 0.20) * 55 + Math.cos(this.time * 0.11) * 20;
-    this.beaTarget.set(bx, 4.5 + Math.sin(this.time * 0.35) * 1.5, bz);
-    this.beacon.position.lerp(this.beaTarget, 0.018);
-    this.beacon.intensity = state.beaI;
-    this.beaconHalo.position.copy(this.beacon.position);
+    // Bloom (mis à jour chaque frame comme hubtown onUpdate)
+    this.bloomPass.strength  = state.bloomStr;
+    this.bloomPass.threshold = state.bloomThr;
+    this.bloomPass.radius    = state.bloomRad;
 
-    // Bloom dynamique
-    this.bloomPass.strength = state.bloom;
+    // Beacon Lissajous
+    const bx = Math.sin(this.time * 0.27) * 60 + Math.sin(this.time * 0.14) * 28;
+    const bz = Math.cos(this.time * 0.20) * 60 + Math.cos(this.time * 0.11) * 22;
+    this.beaTarget.set(bx, 4 + Math.sin(this.time * 0.33) * 1.8, bz);
+    this.beacon.position.lerp(this.beaTarget, 0.016);
+    this.beacon.intensity = state.beaI;
+    this.beaconGlow.position.copy(this.beacon.position);
 
     // Étoiles
     (this.stars.material as THREE.PointsMaterial).opacity = state.stars;
 
-    // Render via composer (bloom actif)
     this.composer.render();
   }
 
   dispose(): void {
     if (this.raf !== null) { cancelAnimationFrame(this.raf); this.raf = null; }
     gsap.killTweensOf(state);
+    (this.terrain.material as THREE.MeshStandardMaterial).displacementMap?.dispose();
+    (this.terrain.material as THREE.MeshStandardMaterial).normalMap?.dispose();
     this.terrain.geometry.dispose();
     (this.terrain.material as THREE.Material).dispose();
     this.composer.dispose();
