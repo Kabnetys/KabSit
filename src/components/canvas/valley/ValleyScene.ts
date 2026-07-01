@@ -137,7 +137,7 @@ export class ValleyScene {
     }
   }
 
-  private updateCameraAndLight(time: number): void {
+  private updateCameraAndLight(time: number, lookFactor = 1): void {
     const camPoint = this.curve.getPointAt(this.currentProgress);
     const tangent = this.curve.getTangentAt(this.currentProgress).normalize();
     this.camera.position.copy(camPoint);
@@ -147,7 +147,7 @@ export class ValleyScene {
     forwardTarget.y -= 4.2;
     forwardTarget.add(right.clone().multiplyScalar(this.mouse.x * Math.tan(MOUSE_MAX_ANGLE) * 10));
     forwardTarget.y += this.mouse.y * Math.tan(MOUSE_MAX_ANGLE) * 10;
-    this.lookTarget.lerp(forwardTarget, this.reducedMotion ? 1 : 0.05);
+    this.lookTarget.lerp(forwardTarget, this.reducedMotion ? 1 : lookFactor);
     this.camera.lookAt(this.lookTarget);
 
     const lightProgress = Math.min(this.currentProgress + LIGHT_AHEAD / PATH_LENGTH, 1);
@@ -165,11 +165,14 @@ export class ValleyScene {
   }
 
   private render(): void {
-    const time = this.clock.getElapsedTime();
-    this.mouse.lerp(this.targetMouse, 0.03);
-    this.currentProgress += (this.targetProgress - this.currentProgress) * 0.06;
+    const delta = this.clock.getDelta();
+    const time = this.clock.elapsedTime;
+    const mouseFactor = 1 - Math.exp(-delta * 8);
+    const progressFactor = 1 - Math.exp(-delta * 12);
+    this.mouse.lerp(this.targetMouse, mouseFactor);
+    this.currentProgress += (this.targetProgress - this.currentProgress) * progressFactor;
 
-    this.updateCameraAndLight(time);
+    this.updateCameraAndLight(time, progressFactor);
     this.applyChapter(this.currentProgress);
     this.renderer.render(this.scene, this.camera);
   }
