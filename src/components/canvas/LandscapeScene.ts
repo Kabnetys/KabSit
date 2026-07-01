@@ -156,26 +156,30 @@ function applyLayeredFog(material: THREE.Material): void {
   material.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, layeredFogUniforms);
 
+    // NB: on préfixe nos varyings "vH*" pour ne pas entrer en collision avec
+    // vFogDepth déjà déclaré par Three.js (fog_pars_vertex/fragment) dès que
+    // material.fog = true — une double déclaration casse la compilation du
+    // shader et rend le mesh invisible (aucune erreur visible à l'écran).
     shader.vertexShader = shader.vertexShader
       .replace(
         '#include <common>',
         `#include <common>
-varying float vFogDepth;
-varying float vFogHeight;`,
+varying float vHFogDepth;
+varying float vHFogHeight;`,
       )
       .replace(
         '#include <fog_vertex>',
         `#include <fog_vertex>
-vFogDepth  = -mvPosition.z;
-vFogHeight = worldPosition.y;`,
+vHFogDepth  = -mvPosition.z;
+vHFogHeight = worldPosition.y;`,
       );
 
     shader.fragmentShader = shader.fragmentShader
       .replace(
         '#include <common>',
         `#include <common>
-varying float vFogDepth;
-varying float vFogHeight;
+varying float vHFogDepth;
+varying float vHFogHeight;
 uniform vec3 uFogColorBottom;
 uniform vec3 uFogColorMiddle;
 uniform vec3 uFogColorTop;
@@ -187,11 +191,11 @@ uniform float uFogFar;`,
       .replace(
         '#include <fog_fragment>',
         `
-float heightT = clamp((vFogHeight - uFogHeightMin) / (uFogHeightMax - uFogHeightMin), 0.0, 1.0);
+float heightT = clamp((vHFogHeight - uFogHeightMin) / (uFogHeightMax - uFogHeightMin), 0.0, 1.0);
 vec3 fogColorH = heightT < 0.5
   ? mix(uFogColorBottom, uFogColorMiddle, heightT * 2.0)
   : mix(uFogColorMiddle, uFogColorTop, (heightT - 0.5) * 2.0);
-float distT = clamp((vFogDepth - uFogNear) / (uFogFar - uFogNear), 0.0, 1.0);
+float distT = clamp((vHFogDepth - uFogNear) / (uFogFar - uFogNear), 0.0, 1.0);
 distT = distT * distT * (3.0 - 2.0 * distT);
 gl_FragColor.rgb = mix(gl_FragColor.rgb, fogColorH, distT);
 `,
