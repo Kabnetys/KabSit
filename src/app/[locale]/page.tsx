@@ -1,4 +1,4 @@
-import SectionHero from '@/components/sections/SectionHero';
+import SectionHero from '@/components/sections/S1_Hero';
 import SectionServices from '@/components/sections/SectionServices';
 import SectionMethod from '@/components/sections/SectionMethod';
 import SectionAppMockup from '@/components/sections/SectionAppMockup';
