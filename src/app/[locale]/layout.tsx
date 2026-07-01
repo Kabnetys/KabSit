@@ -4,7 +4,10 @@ import { unstable_setRequestLocale } from 'next-intl/server';
 import { Space_Grotesk, Inter, JetBrains_Mono } from 'next/font/google';
 import Script from 'next/script';
 import { notFound } from 'next/navigation';
+import dynamicImport from 'next/dynamic';
 import '@/app/globals.css';
+
+const WebGLBackground = dynamicImport(() => import('@/components/canvas/WebGLBackground'), { ssr: false });
 
 const LOCALES = ['fr', 'en', 'es'];
 
@@ -79,7 +82,8 @@ export default async function LocaleLayout({
       lang={locale}
       className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable}`}
     >
-      <body>
+      <body style={{ background: '#020A19', margin: 0, overflow: 'auto' }}>
+        <WebGLBackground />
         <Script
           id="org-schema"
           type="application/ld+json"

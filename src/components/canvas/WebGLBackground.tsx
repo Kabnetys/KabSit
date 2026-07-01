@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { ValleyScene } from './ValleyScene';
+import { LandscapeScene } from './LandscapeScene';
 
 export default function WebGLBackground(): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -11,7 +11,7 @@ export default function WebGLBackground(): JSX.Element {
     if (!canvas) return;
 
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const scene = new ValleyScene(canvas);
+    const scene = new LandscapeScene(canvas);
     scene.setSize(window.innerWidth, window.innerHeight);
 
     if (!prefersReduced) scene.start();
