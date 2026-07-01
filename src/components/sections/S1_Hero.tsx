@@ -19,13 +19,19 @@ export default function S1_Hero(): JSX.Element {
 
   // Entrance animation
   useEffect(() => {
+    const els = [chipRef.current, titleRef.current, subRef.current, ctaRef.current, scrollRef.current];
+    // Make visible immediately as fallback
+    els.forEach((el) => { if (el) el.style.opacity = '1'; });
+
     const ctx = gsap.context(() => {
+      gsap.set([chipRef.current, titleRef.current, subRef.current, ctaRef.current], { opacity: 0, y: 30 });
+      gsap.set(scrollRef.current, { opacity: 0 });
       const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
-      tl.fromTo(chipRef.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.7 }, 0.3)
-        .fromTo(titleRef.current, { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 0.9 }, 0.5)
-        .fromTo(subRef.current, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.8 }, 0.75)
-        .fromTo(ctaRef.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.7 }, 0.95)
-        .fromTo(scrollRef.current, { opacity: 0 }, { opacity: 1, duration: 0.6 }, 1.3);
+      tl.to(chipRef.current, { opacity: 1, y: 0, duration: 0.7 }, 0.3)
+        .to(titleRef.current, { opacity: 1, y: 0, duration: 0.9 }, 0.5)
+        .to(subRef.current, { opacity: 1, y: 0, duration: 0.8 }, 0.75)
+        .to(ctaRef.current, { opacity: 1, y: 0, duration: 0.7 }, 0.95)
+        .to(scrollRef.current, { opacity: 1, duration: 0.6 }, 1.3);
     }, sectionRef);
     return () => ctx.revert();
   }, []);
@@ -73,7 +79,7 @@ export default function S1_Hero(): JSX.Element {
       {/* Chip */}
       <div
         ref={chipRef}
-        className="mb-8 inline-flex items-center gap-2 px-4 py-2 rounded-full border border-cyan/30 text-cyan text-xs font-mono tracking-widest uppercase opacity-0"
+        className="mb-8 inline-flex items-center gap-2 px-4 py-2 rounded-full border border-cyan/30 text-cyan text-xs font-mono tracking-widest uppercase"
       >
         <span className="w-1.5 h-1.5 rounded-full bg-cyan animate-pulse" aria-hidden="true" />
         KabNetys · Développement sur mesure
@@ -82,7 +88,7 @@ export default function S1_Hero(): JSX.Element {
       {/* Headline */}
       <h1
         ref={titleRef}
-        className="font-display font-bold text-5xl md:text-7xl lg:text-8xl leading-[1.08] tracking-tight max-w-5xl opacity-0"
+        className="font-display font-bold text-5xl md:text-7xl lg:text-8xl leading-[1.08] tracking-tight max-w-5xl"
       >
         {/* Rotating word line */}
         <span className="block text-white mb-2">
@@ -119,7 +125,7 @@ export default function S1_Hero(): JSX.Element {
       {/* Subline */}
       <p
         ref={subRef}
-        className="mt-6 text-lg md:text-xl text-white/60 max-w-2xl leading-relaxed opacity-0"
+        className="mt-6 text-lg md:text-xl text-white/60 max-w-2xl leading-relaxed"
       >
         On crée les <span className="text-white/90">applications et sites internet</span> qui simplifient
         votre activité — développés avec l&apos;IA agentique pour des délais et des coûts adaptés à votre réalité.
@@ -128,7 +134,7 @@ export default function S1_Hero(): JSX.Element {
       {/* CTAs */}
       <div
         ref={ctaRef}
-        className="mt-10 flex flex-wrap gap-4 justify-center opacity-0"
+        className="mt-10 flex flex-wrap gap-4 justify-center"
       >
         <Button href="#contact" variant="primary">Démarrer un projet</Button>
         <Button href="#services" variant="outline">Voir nos services</Button>
