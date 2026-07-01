@@ -19,6 +19,8 @@ import ScrollTrigger from 'gsap/ScrollTrigger';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import { GammaCorrectionShader } from 'three/examples/jsm/shaders/GammaCorrectionShader.js';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -327,7 +329,10 @@ export class LandscapeScene {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.toneMapping         = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure  = 1.05;
+    this.renderer.toneMappingExposure  = 1.4;
+    // @types/three (0.185) est en avance sur le runtime three (0.148) installé :
+    // outputEncoding/sRGBEncoding existent à l'exécution mais pas dans les types.
+    (this.renderer as unknown as { outputEncoding: number }).outputEncoding = 3001; // THREE.sRGBEncoding
     this.renderer.shadowMap.enabled   = true;
     this.renderer.shadowMap.type      = THREE.PCFSoftShadowMap;
     this.renderer.setClearColor(BG_COLOR, 1);
@@ -355,6 +360,7 @@ export class LandscapeScene {
     this.composer = new EffectComposer(this.renderer);
     this.composer.addPass(new RenderPass(this.scene, this.camera));
     this.composer.addPass(this.bloomPass);
+    this.composer.addPass(new ShaderPass(GammaCorrectionShader));
 
     // ── Terrain (displacement + normal texture) ──
     const dispTex = makeDisplacementTexture();
