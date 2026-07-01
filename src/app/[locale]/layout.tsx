@@ -7,6 +7,7 @@ import Script from 'next/script';
 import { notFound } from 'next/navigation';
 import NavBar from '@/components/ui/NavBar';
 import Footer from '@/components/layout/Footer';
+import SmoothScroll from '@/components/ui/SmoothScroll';
 import '@/app/globals.css';
 
 const LOCALES = ['fr', 'en', 'es'];
@@ -94,9 +95,11 @@ export default async function LocaleLayout({
         <NextIntlClientProvider locale={locale} messages={messages} timeZone="Europe/Paris" now={new Date()}>
           <WebGLBackground />
           <NavBar />
-          <main id="main-content" className="relative" style={{ zIndex: 1 }}>
-            {children}
-          </main>
+          <SmoothScroll>
+            <main id="main-content" className="relative" style={{ zIndex: 1 }}>
+              {children}
+            </main>
+          </SmoothScroll>
           <Footer />
         </NextIntlClientProvider>
       </body>
