@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -16,6 +16,9 @@ export default function S2_Pain(): JSX.Element {
   const sectionRef = useRef<HTMLDivElement>(null);
   const phrasesRef = useRef<(HTMLParagraphElement | null)[]>([]);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const bgPulseRef = useRef<HTMLDivElement>(null);
+  const dotsRef = useRef<(HTMLSpanElement | null)[]>([]);
+  const [activeIndex, setActiveIndex] = useState(-1);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -23,9 +26,9 @@ export default function S2_Pain(): JSX.Element {
 
     const ctx = gsap.context(() => {
       const phrases = phrasesRef.current.filter(Boolean);
-      // Hide all phrases initially
       gsap.set(phrases, { opacity: 0, y: 40 });
       gsap.set(overlayRef.current, { opacity: 0 });
+      gsap.set(bgPulseRef.current, { opacity: 0 });
 
       const tl = gsap.timeline({
         scrollTrigger: {
@@ -38,7 +41,9 @@ export default function S2_Pain(): JSX.Element {
           onEnter: () => tl.play(),
           onLeaveBack: () => {
             tl.pause(0);
+            setActiveIndex(-1);
             gsap.set(phrasesRef.current.filter(Boolean), { opacity: 0, y: 40 });
+            gsap.set(bgPulseRef.current, { opacity: 0 });
           },
         },
       });
@@ -47,6 +52,20 @@ export default function S2_Pain(): JSX.Element {
         const el = phrasesRef.current[i];
         if (!el) return;
         const isLast = i === PHRASES.length - 1;
+
+        // Background pulse on each new phrase
+        tl.add(() => {
+          setActiveIndex(i);
+          if (!isLast) {
+            gsap.fromTo(
+              bgPulseRef.current,
+              { opacity: 0.18 },
+              { opacity: 0, duration: 1.2, ease: 'power2.out' }
+            );
+          } else {
+            gsap.set(bgPulseRef.current, { opacity: 0 });
+          }
+        });
 
         tl.to(el, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' })
           .to(el, {
@@ -58,17 +77,14 @@ export default function S2_Pain(): JSX.Element {
           })
           .to({}, { duration: isLast ? 1.2 : 0.7 });
 
-        if (i < PHRASES.length - 1) {
+        if (!isLast) {
           tl.to(el, { opacity: 0, y: -30, duration: 0.35, ease: 'power2.in' });
         }
       });
 
       const lastEl = phrasesRef.current[PHRASES.length - 1];
-      tl.to(lastEl ?? {}, { opacity: 0, y: -60, duration: 0.5, ease: 'power2.in' }, '+=0.3').to(overlayRef.current, {
-        opacity: 1,
-        duration: 0.4,
-        ease: 'power2.inOut',
-      });
+      tl.to(lastEl ?? {}, { opacity: 0, y: -60, duration: 0.5, ease: 'power2.in' }, '+=0.3')
+        .to(overlayRef.current, { opacity: 1, duration: 0.4, ease: 'power2.inOut' });
     }, section);
 
     return () => ctx.revert();
@@ -76,12 +92,19 @@ export default function S2_Pain(): JSX.Element {
 
   return (
     <div ref={sectionRef} className="relative w-full h-screen overflow-hidden flex items-center justify-center">
-      {/* Alert background gradient */}
+
+      {/* Static red radial base */}
       <div
         className="absolute inset-0 pointer-events-none"
-        style={{
-          background: 'radial-gradient(ellipse 70% 50% at 50% 50%, rgba(180,30,30,0.12) 0%, transparent 70%)',
-        }}
+        style={{ background: 'radial-gradient(ellipse 70% 50% at 50% 50%, rgba(180,30,30,0.08) 0%, transparent 70%)' }}
+        aria-hidden="true"
+      />
+
+      {/* Pulsing red bg on each phrase */}
+      <div
+        ref={bgPulseRef}
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse 60% 40% at 50% 50%, rgba(220,50,30,0.22) 0%, transparent 65%)', opacity: 0 }}
         aria-hidden="true"
       />
 
@@ -105,6 +128,22 @@ export default function S2_Pain(): JSX.Element {
               </span>
             )}
           </p>
+        ))}
+      </div>
+
+      {/* Progress dots — bottom center */}
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-3 z-10" aria-hidden="true">
+        {PHRASES.map((_, i) => (
+          <span
+            key={i}
+            ref={(el) => { dotsRef.current[i] = el; }}
+            className="block rounded-full transition-all duration-500"
+            style={{
+              width: activeIndex === i ? '24px' : '6px',
+              height: '6px',
+              backgroundColor: activeIndex === i ? '#00cfff' : 'rgba(255,255,255,0.2)',
+            }}
+          />
         ))}
       </div>
 
