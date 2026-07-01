@@ -86,30 +86,23 @@ export default function S2_Pain(): JSX.Element {
       />
 
       {/* Phrases */}
-      <div className="relative z-10 text-center px-6 max-w-4xl mx-auto">
+      <div className="relative z-10 text-center px-6 max-w-6xl mx-auto w-full">
         {PHRASES.map((phrase, i) => (
           <p
             key={i}
             ref={(el) => { phrasesRef.current[i] = el; }}
-            className={`absolute left-1/2 -translate-x-1/2 w-full font-display font-bold leading-tight ${
-              i === PHRASES.length - 1
-                ? 'text-3xl md:text-5xl text-white/90'
-                : 'text-2xl md:text-4xl text-white/70'
-            }`}
+            className="absolute left-1/2 w-full font-display font-bold leading-none"
             style={{ top: '50%', transform: 'translate(-50%, -50%)' }}
           >
             {i === PHRASES.length - 1 ? (
-              <>
-                <span className="text-white/50">Ça fonctionne… </span>
+              <span className="text-3xl md:text-5xl lg:text-6xl">
+                <span className="text-white/40">Ça fonctionne… </span>
                 <span className="text-white">mais ça vous coûte du temps chaque jour.</span>
-              </>
+              </span>
             ) : (
-              <>
-                <span className="inline-block px-3 py-1 rounded mr-2 text-sm font-mono text-red-400/80 border border-red-400/20 bg-red-400/5 align-middle">
-                  ✗
-                </span>
+              <span className="text-4xl md:text-6xl lg:text-7xl text-white/80">
                 {phrase}
-              </>
+              </span>
             )}
           </p>
         ))}
