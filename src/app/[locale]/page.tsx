@@ -4,7 +4,7 @@ import S3_Services from '@/components/sections/S3_Services';
 import S4_AI from '@/components/sections/S4_AI';
 import S5_Team from '@/components/sections/S5_Team';
 import S6_Method from '@/components/sections/S6_Method';
-import SectionContact from '@/components/sections/SectionContact';
+import S7_Contact from '@/components/sections/S7_Contact';
 
 export function generateStaticParams() {
   return [{ locale: 'fr' }, { locale: 'en' }, { locale: 'es' }];
@@ -19,7 +19,7 @@ export default function HomePage(): JSX.Element {
       <S4_AI />
       <S5_Team />
       <S6_Method />
-      <SectionContact />
+      <S7_Contact />
     </>
   );
 }
