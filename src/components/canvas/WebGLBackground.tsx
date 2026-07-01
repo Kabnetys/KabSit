@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { JourneyScene } from './JourneyScene';
+import { ValleyScene } from './valley/ValleyScene';
 
 export default function WebGLBackground(): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -17,7 +17,7 @@ export default function WebGLBackground(): JSX.Element {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const lightweight = window.matchMedia('(max-width: 768px)').matches;
 
-    const scene = new JourneyScene(canvas, { reducedMotion, lightweight });
+    const scene = new ValleyScene(canvas, { reducedMotion, lightweight });
     scene.setSize(window.innerWidth, window.innerHeight);
 
     if (!reducedMotion) {

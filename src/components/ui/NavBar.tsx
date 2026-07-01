@@ -15,7 +15,6 @@ export default function NavBar(): JSX.Element {
 
   const links = [
     { key: 'services' as const, href: `${prefix}/#services` },
-    { key: 'method' as const, href: `${prefix}/#method` },
     { key: 'team' as const, href: `${prefix}/#team` },
     { key: 'contact' as const, href: `${prefix}/#contact` },
   ];

@@ -1,7 +1,7 @@
 import SectionHero from '@/components/sections/SectionHero';
+import SectionPain from '@/components/sections/SectionPain';
 import SectionServices from '@/components/sections/SectionServices';
-import SectionMethod from '@/components/sections/SectionMethod';
-import SectionAppMockup from '@/components/sections/SectionAppMockup';
+import SectionAI from '@/components/sections/SectionAI';
 import SectionTeam from '@/components/sections/SectionTeam';
 import SectionContact from '@/components/sections/SectionContact';
 
@@ -13,9 +13,9 @@ export default function HomePage(): JSX.Element {
   return (
     <>
       <SectionHero />
+      <SectionPain />
       <SectionServices />
-      <SectionMethod />
-      <SectionAppMockup />
+      <SectionAI />
       <SectionTeam />
       <SectionContact />
     </>

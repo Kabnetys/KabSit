@@ -1,11 +1,26 @@
 {
   "meta": { "description": "Développement sur mesure pour TPE et PME. Applications métier, sites internet et automatisation." },
-  "nav": { "services": "Services", "method": "Méthode", "team": "L'équipe", "contact": "Contact" },
+  "nav": { "services": "Services", "team": "L'équipe", "contact": "Contact" },
   "hero": {
     "headline": "Des outils métier,\npas des bricolages.",
     "subline": "Développement sur mesure pour les TPE et PME qui veulent enfin des solutions qui leur ressemblent.",
     "cta_primary": "Démarrer un projet",
     "cta_secondary": "Voir nos services"
+  },
+  "pain": {
+    "label": "Le quotidien (placeholder)",
+    "title": "Ce que vous vivez encore tous les jours. (texte provisoire)",
+    "items": [
+      { "id": "excel", "text": "Un fichier Excel qui ne dit plus la vérité à personne." },
+      { "id": "whatsapp", "text": "Des messages WhatsApp comme seul outil de suivi client." },
+      { "id": "dossiers", "text": "Des dossiers partagés que plus personne ne retrouve." },
+      { "id": "ressaisie", "text": "La même information ressaisie trois fois." }
+    ]
+  },
+  "ai": {
+    "label": "Intelligence (placeholder)",
+    "title": "Une IA qui travaille pour vous. (texte provisoire)",
+    "desc": "Emplacement réservé — contenu à valider avec vous avant mise en ligne."
   },
   "services": {
     "label": "Services",

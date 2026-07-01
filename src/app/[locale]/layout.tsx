@@ -18,6 +18,7 @@ async function loadMessages(locale: string): Promise<any> {
 }
 
 const WebGLBackground = dynamicImport(() => import('@/components/canvas/WebGLBackground'), { ssr: false });
+const ChapterTransitions = dynamicImport(() => import('@/components/canvas/ChapterTransitions'), { ssr: false });
 
 const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-display-loaded' });
 const inter = Inter({ subsets: ['latin'], variable: '--font-body-loaded' });
@@ -98,10 +99,11 @@ export default async function LocaleLayout({
             style={{
               zIndex: 0,
               background:
-                'radial-gradient(ellipse at 50% 45%, rgba(4,8,28,0.25) 0%, rgba(4,8,28,0.6) 65%, rgba(4,8,28,0.9) 100%)',
+                'radial-gradient(ellipse at 50% 45%, rgba(4,8,28,0.05) 0%, rgba(4,8,28,0.3) 65%, rgba(4,8,28,0.55) 100%)',
             }}
             aria-hidden="true"
           />
+          <ChapterTransitions />
           <NavBar />
           <main id="main-content" className="relative" style={{ zIndex: 1 }}>
             {children}

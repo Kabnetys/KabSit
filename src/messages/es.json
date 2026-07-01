@@ -1,11 +1,26 @@
 {
   "meta": { "description": "Desarrollo a medida para pymes. Aplicaciones de negocio, sitios web y automatización." },
-  "nav": { "services": "Servicios", "method": "Método", "team": "Equipo", "contact": "Contacto" },
+  "nav": { "services": "Servicios", "team": "Equipo", "contact": "Contacto" },
   "hero": {
     "headline": "Herramientas profesionales,\nno parches.",
     "subline": "Desarrollo a medida para pymes que quieren soluciones que realmente les correspondan.",
     "cta_primary": "Iniciar un proyecto",
     "cta_secondary": "Nuestros servicios"
+  },
+  "pain": {
+    "label": "El día a día (borrador)",
+    "title": "Lo que todavía vives cada día. (texto provisional)",
+    "items": [
+      { "id": "excel", "text": "Un Excel en el que ya nadie confía." },
+      { "id": "whatsapp", "text": "WhatsApp como única herramienta de seguimiento." },
+      { "id": "dossiers", "text": "Carpetas compartidas donde nadie encuentra nada." },
+      { "id": "ressaisie", "text": "La misma información escrita tres veces." }
+    ]
+  },
+  "ai": {
+    "label": "Inteligencia (borrador)",
+    "title": "Una IA que trabaja para ti. (texto provisional)",
+    "desc": "Espacio reservado — contenido por confirmar contigo antes del lanzamiento."
   },
   "services": {
     "label": "Servicios",

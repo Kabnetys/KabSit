@@ -1,11 +1,26 @@
 {
   "meta": { "description": "Custom development for small businesses. Business apps, websites and automation." },
-  "nav": { "services": "Services", "method": "Method", "team": "Team", "contact": "Contact" },
+  "nav": { "services": "Services", "team": "Team", "contact": "Contact" },
   "hero": {
     "headline": "Business tools,\nnot patchwork.",
     "subline": "Custom development for small and mid-sized businesses that want solutions built for them.",
     "cta_primary": "Start a project",
     "cta_secondary": "Our services"
+  },
+  "pain": {
+    "label": "Daily life (placeholder)",
+    "title": "What you still live with every day. (draft copy)",
+    "items": [
+      { "id": "excel", "text": "A spreadsheet nobody trusts anymore." },
+      { "id": "whatsapp", "text": "WhatsApp messages as your only client tracking." },
+      { "id": "dossiers", "text": "Shared folders nobody can find anything in." },
+      { "id": "ressaisie", "text": "The same information typed in three times." }
+    ]
+  },
+  "ai": {
+    "label": "Intelligence (placeholder)",
+    "title": "AI that works for you. (draft copy)",
+    "desc": "Placeholder — content to be confirmed with you before launch."
   },
   "services": {
     "label": "Services",

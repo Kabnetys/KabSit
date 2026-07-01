@@ -4,8 +4,9 @@ import { useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { AppMockupScene } from '@/components/canvas/AppMockupScene';
 
-export default function SectionAppMockup(): JSX.Element {
+export default function SectionAI(): JSX.Element {
   const t = useTranslations('mockup');
+  const tAi = useTranslations('ai');
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -29,11 +30,11 @@ export default function SectionAppMockup(): JSX.Element {
   const features = t.raw('features') as string[];
 
   return (
-    <section id="mockup" className="relative py-32 px-6 overflow-hidden" aria-labelledby="mockup-title">
+    <section id="ai" className="relative py-32 px-6 overflow-hidden" aria-labelledby="ai-title">
       <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
         <div>
-          <span className="text-xs font-mono tracking-widest text-cyan uppercase">{t('label')}</span>
-          <h2 id="mockup-title" className="mt-4 font-display font-bold text-4xl md:text-5xl text-white leading-tight">
+          <span className="text-xs font-mono tracking-widest text-cyan uppercase">{tAi('label')}</span>
+          <h2 id="ai-title" className="mt-4 font-display font-bold text-4xl md:text-5xl text-white leading-tight">
             {t('title').split('\n').map((line, i) => (
               <span key={i} className={i === 1 ? 'block text-blue' : 'block'}>{line}</span>
             ))}
@@ -48,7 +49,7 @@ export default function SectionAppMockup(): JSX.Element {
             ))}
           </ul>
         </div>
-        <div className="relative rounded-2xl overflow-hidden" style={{ boxShadow: '0 0 60px rgba(0,102,255,0.2)' }}>
+        <div className="relative rounded-2xl overflow-hidden" style={{ boxShadow: '0 0 60px rgba(61,124,255,0.2)' }}>
           <canvas ref={canvasRef} className="w-full aspect-video" aria-label={t('label')} />
         </div>
       </div>
