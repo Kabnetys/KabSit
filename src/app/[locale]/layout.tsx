@@ -94,13 +94,11 @@ export default async function LocaleLayout({
         />
         <NextIntlClientProvider locale={locale} messages={messages} timeZone="Europe/Paris" now={new Date()}>
           <WebGLBackground />
-          <NavBar />
           <SmoothScroll>
             <main id="main-content" className="relative" style={{ zIndex: 1 }}>
               {children}
             </main>
           </SmoothScroll>
-          <Footer />
         </NextIntlClientProvider>
       </body>
     </html>
