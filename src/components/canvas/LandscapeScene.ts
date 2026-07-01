@@ -133,6 +133,71 @@ function makeNormalTexture(dispTex: THREE.CanvasTexture): THREE.CanvasTexture {
   return tex;
 }
 
+// ─── Fog 3-couches (distance + hauteur) — reproduit uFogColorTop/Middle/Bottom ─
+/**
+ * Injection GLSL dans le fragment shader standard de Three.js.
+ * Remplace le fog exp2 plat par un dégradé vertical (bottom→middle→top)
+ * modulé par la distance à la caméra — exactement le principe du shader
+ * hubtown (uFogStep1/2/3, uFogColorTop/Middle/Bottom, vFogHeight/vFogDepth).
+ */
+const layeredFogUniforms = {
+  uFogColorBottom: { value: new THREE.Color(0x010308) },
+  uFogColorMiddle: { value: new THREE.Color(0x081226) },
+  uFogColorTop:    { value: new THREE.Color(0x0e1c3a) },
+  uFogHeightMin:   { value: -10 },
+  uFogHeightMax:   { value: 60 },
+  uFogNear:        { value: 40 },
+  uFogFar:         { value: 260 },
+};
+
+function applyLayeredFog(material: THREE.Material): void {
+  material.onBeforeCompile = (shader) => {
+    Object.assign(shader.uniforms, layeredFogUniforms);
+
+    shader.vertexShader = shader.vertexShader
+      .replace(
+        '#include <common>',
+        `#include <common>
+varying float vFogDepth;
+varying float vFogHeight;`,
+      )
+      .replace(
+        '#include <fog_vertex>',
+        `#include <fog_vertex>
+vFogDepth  = -mvPosition.z;
+vFogHeight = worldPosition.y;`,
+      );
+
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        '#include <common>',
+        `#include <common>
+varying float vFogDepth;
+varying float vFogHeight;
+uniform vec3 uFogColorBottom;
+uniform vec3 uFogColorMiddle;
+uniform vec3 uFogColorTop;
+uniform float uFogHeightMin;
+uniform float uFogHeightMax;
+uniform float uFogNear;
+uniform float uFogFar;`,
+      )
+      .replace(
+        '#include <fog_fragment>',
+        `
+float heightT = clamp((vFogHeight - uFogHeightMin) / (uFogHeightMax - uFogHeightMin), 0.0, 1.0);
+vec3 fogColorH = heightT < 0.5
+  ? mix(uFogColorBottom, uFogColorMiddle, heightT * 2.0)
+  : mix(uFogColorMiddle, uFogColorTop, (heightT - 0.5) * 2.0);
+float distT = clamp((vFogDepth - uFogNear) / (uFogFar - uFogNear), 0.0, 1.0);
+distT = distT * distT * (3.0 - 2.0 * distT);
+gl_FragColor.rgb = mix(gl_FragColor.rgb, fogColorH, distT);
+`,
+      );
+  };
+  material.needsUpdate = true;
+}
+
 // ─── Chapitres scroll ─────────────────────────────────────────────────────────
 // Architecture hubtown : GSAP ScrollTrigger scrub → state → position caméra
 interface Chapter {
@@ -151,21 +216,34 @@ interface Chapter {
   beaI:       number;
   // Fog (inspiré du fog gradient hubtown)
   fogDensity: number;
+  fogNear:    number;
+  fogFar:     number;
+  fogBottom:  THREE.Color;
+  fogMiddle:  THREE.Color;
+  fogTop:     THREE.Color;
   // Étoiles
   stars:      number;
 }
 
+function fc(hex: number): THREE.Color { return new THREE.Color(hex); }
+
 const CHAPTERS: Chapter[] = [
-  { p:0.00, r:  8, theta:0.00, camY:180, lookY:0, bloomStr:0.3, bloomThr:0.88, bloomRad:0.4, moonI:1.8, beaI: 8, fogDensity:0.0003, stars:0.0 },
-  { p:0.17, r: 35, theta:0.22, camY:145, lookY:2, bloomStr:0.5, bloomThr:0.82, bloomRad:0.5, moonI:2.1, beaI:16, fogDensity:0.0005, stars:0.1 },
-  { p:0.35, r: 75, theta:0.50, camY:110, lookY:3, bloomStr:0.7, bloomThr:0.78, bloomRad:0.5, moonI:2.4, beaI:26, fogDensity:0.0008, stars:0.3 },
-  { p:0.52, r:105, theta:0.78, camY: 78, lookY:4, bloomStr:1.1, bloomThr:0.72, bloomRad:0.6, moonI:2.0, beaI:38, fogDensity:0.0015, stars:0.6 },
-  { p:0.68, r:115, theta:1.08, camY: 58, lookY:4, bloomStr:0.9, bloomThr:0.75, bloomRad:0.6, moonI:2.3, beaI:30, fogDensity:0.0011, stars:0.8 },
-  { p:0.84, r:110, theta:1.32, camY: 44, lookY:3, bloomStr:0.7, bloomThr:0.80, bloomRad:0.5, moonI:2.6, beaI:20, fogDensity:0.0008, stars:0.9 },
-  { p:1.00, r:100, theta:1.58, camY: 35, lookY:2, bloomStr:0.5, bloomThr:0.84, bloomRad:0.4, moonI:2.9, beaI:14, fogDensity:0.0006, stars:1.0 },
+  { p:0.00, r:  8, theta:0.00, camY:180, lookY:0, bloomStr:0.3, bloomThr:0.88, bloomRad:0.4, moonI:1.8, beaI: 8, fogDensity:0.0003, fogNear: 60, fogFar:300, fogBottom:fc(0x010308), fogMiddle:fc(0x040a18), fogTop:fc(0x081430), stars:0.0 },
+  { p:0.17, r: 35, theta:0.22, camY:145, lookY:2, bloomStr:0.5, bloomThr:0.82, bloomRad:0.5, moonI:2.1, beaI:16, fogDensity:0.0005, fogNear: 50, fogFar:280, fogBottom:fc(0x01050c), fogMiddle:fc(0x081226), fogTop:fc(0x0c1c3a), stars:0.1 },
+  { p:0.35, r: 75, theta:0.50, camY:110, lookY:3, bloomStr:0.7, bloomThr:0.78, bloomRad:0.5, moonI:2.4, beaI:26, fogDensity:0.0008, fogNear: 42, fogFar:250, fogBottom:fc(0x020610), fogMiddle:fc(0x0a1530), fogTop:fc(0x102248), stars:0.3 },
+  { p:0.52, r:105, theta:0.78, camY: 78, lookY:4, bloomStr:1.1, bloomThr:0.72, bloomRad:0.6, moonI:2.0, beaI:38, fogDensity:0.0015, fogNear: 35, fogFar:220, fogBottom:fc(0x030814), fogMiddle:fc(0x0c1938), fogTop:fc(0x142850), stars:0.6 },
+  { p:0.68, r:115, theta:1.08, camY: 58, lookY:4, bloomStr:0.9, bloomThr:0.75, bloomRad:0.6, moonI:2.3, beaI:30, fogDensity:0.0011, fogNear: 40, fogFar:240, fogBottom:fc(0x020712), fogMiddle:fc(0x0a1730), fogTop:fc(0x102448), stars:0.8 },
+  { p:0.84, r:110, theta:1.32, camY: 44, lookY:3, bloomStr:0.7, bloomThr:0.80, bloomRad:0.5, moonI:2.6, beaI:20, fogDensity:0.0008, fogNear: 48, fogFar:260, fogBottom:fc(0x01060e), fogMiddle:fc(0x08132a), fogTop:fc(0x0d1e3e), stars:0.9 },
+  { p:1.00, r:100, theta:1.58, camY: 35, lookY:2, bloomStr:0.5, bloomThr:0.84, bloomRad:0.4, moonI:2.9, beaI:14, fogDensity:0.0006, fogNear: 55, fogFar:290, fogBottom:fc(0x01050c), fogMiddle:fc(0x061024), fogTop:fc(0x0a1a34), stars:1.0 },
 ];
 
-const state = { ...CHAPTERS[0]!, p: 0 };
+const state = {
+  ...CHAPTERS[0]!,
+  p: 0,
+  fogBottom: CHAPTERS[0]!.fogBottom.clone(),
+  fogMiddle: CHAPTERS[0]!.fogMiddle.clone(),
+  fogTop:    CHAPTERS[0]!.fogTop.clone(),
+};
 
 function seekTo(progress: number): void {
   let lo = CHAPTERS[0]!, hi = CHAPTERS[CHAPTERS.length - 1]!;
@@ -192,9 +270,16 @@ function seekTo(progress: number): void {
     moonI:      L(lo.moonI,      hi.moonI),
     beaI:       L(lo.beaI,       hi.beaI),
     fogDensity: L(lo.fogDensity, hi.fogDensity),
+    fogNear:    L(lo.fogNear,    hi.fogNear),
+    fogFar:     L(lo.fogFar,     hi.fogFar),
     stars:      L(lo.stars,      hi.stars),
     overwrite: true,
   });
+
+  // Couleurs fog interpolées séparément (THREE.Color n'est pas un number GSAP)
+  state.fogBottom.copy(lo.fogBottom).lerp(hi.fogBottom, e);
+  state.fogMiddle.copy(lo.fogMiddle).lerp(hi.fogMiddle, e);
+  state.fogTop.copy(lo.fogTop).lerp(hi.fogTop, e);
 }
 
 // ─── Étoiles ──────────────────────────────────────────────────────────────────
@@ -291,6 +376,8 @@ export class LandscapeScene {
       fog:              true,
     });
 
+    applyLayeredFog(mat);
+
     this.terrain = new THREE.Mesh(geo, mat);
     this.terrain.receiveShadow = true;
     this.terrain.castShadow    = true;
@@ -380,8 +467,16 @@ export class LandscapeScene {
       0,
     );
 
-    // Fog
+    // Fog exp2 (background/scene) + fog 3-couches (terrain shader)
     (this.scene.fog as THREE.FogExp2).density = state.fogDensity;
+    layeredFogUniforms.uFogColorBottom.value.copy(state.fogBottom);
+    layeredFogUniforms.uFogColorMiddle.value.copy(state.fogMiddle);
+    layeredFogUniforms.uFogColorTop.value.copy(state.fogTop);
+    layeredFogUniforms.uFogNear.value = state.fogNear;
+    layeredFogUniforms.uFogFar.value  = state.fogFar;
+    // La couleur de fond de scène suit le fog bottom pour une cohérence parfaite
+    (this.scene.background as THREE.Color).copy(state.fogBottom);
+    (this.scene.fog as THREE.FogExp2).color.copy(state.fogBottom);
 
     // Lune
     this.moon.intensity = state.moonI;
