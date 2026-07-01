@@ -21,10 +21,10 @@ function fbm(x: number, y: number, oct = 6): number {
 }
 
 // ─── Terrain shape ───────────────────────────────────────────────────────────
-// Camera: Z from +120 (aerial start) → -110 (panorama). t = (120-z)/230
+// Camera: Z from +140 (aerial start) → -106 (panorama). t = (140-z)/246
 
 function terrainH(wx: number, wz: number): number {
-  const t    = Math.max(0, Math.min(1, (120 - wz) / 230));
+  const t    = Math.max(0, Math.min(1, (140 - wz) / 246));
   const open = Math.max(0, (t - 0.68) / 0.32);
 
   const vHalf = 24 + open * 58; // valley half-width: 24→82
@@ -84,55 +84,45 @@ const GRANITE_GLSL = /* glsl */`
     return vec2(md1, md2);
   }
 
-  // ── Granite color ─────────────────────────────────────────────────────────
+  // ── Granite color — pure stone, no vegetation ─────────────────────────────
+  // Palette: strictly neutral grey (feldspar / quartz / biotite).
+  // Atmospheric color comes from fog only, not from the mesh texture.
   vec3 graniteColor(vec3 wp, float slope, float height) {
-    // Use world-XZ as UV, scaled for grain size
     vec2 uv  = wp.xz * 0.28;
     vec2 uv2 = wp.xz * 0.80;
     vec2 uv3 = wp.xz * 2.50;
 
-    // Large grain (feldspar crystal faces)
-    vec2 v1 = voronoi(uv  * 3.5);
-    // Medium grain (quartz + biotite mix)
-    vec2 v2 = voronoi(uv2 * 5.0);
-    // Fine micro-speckles (dark biotite inclusions)
-    vec2 v3 = voronoi(uv3 * 8.0);
+    vec2 v1 = voronoi(uv  * 3.5);  // large feldspar crystals
+    vec2 v2 = voronoi(uv2 * 5.0);  // medium quartz grains
+    vec2 v3 = voronoi(uv3 * 8.0);  // fine biotite speckles
 
-    // Crack / edge darkening between crystals
     float crack1 = smoothstep(0.04, 0.18, v1.y - v1.x);
     float crack2 = smoothstep(0.02, 0.12, v2.y - v2.x);
 
-    // Granite mineral palette (dark granite = dark base)
-    vec3 feldspar  = vec3(0.34, 0.32, 0.37); // light-grey feldspar
-    vec3 quartz    = vec3(0.24, 0.23, 0.28); // cool-grey quartz
-    vec3 biotite   = vec3(0.06, 0.05, 0.08); // near-black biotite
-    vec3 crackCol  = vec3(0.04, 0.03, 0.05); // crack / joint fill
+    // Neutral stone palette — cool grey only, no hue shift
+    vec3 feldspar = vec3(0.42, 0.41, 0.43); // light grey
+    vec3 quartz   = vec3(0.27, 0.26, 0.29); // medium grey
+    vec3 biotite  = vec3(0.08, 0.07, 0.09); // near-black
+    vec3 crackCol = vec3(0.03, 0.03, 0.04); // joint / crack fill
 
-    // Large crystal variation
-    float fGrain = smoothstep(0.30, 0.60, v1.x);
-    // Medium variation — mix quartz/feldspar
-    float mGrain = smoothstep(0.20, 0.50, v2.x);
-    // Dark micro-speckle: biotite inclusions
-    float speck  = step(0.22, v3.x); // sharp 0/1
+    float fGrain = smoothstep(0.30, 0.62, v1.x);
+    float mGrain = smoothstep(0.20, 0.52, v2.x);
+    float speck  = step(0.20, v3.x);
 
-    vec3 col = mix(quartz, feldspar, fGrain * 0.8);
-    col = mix(biotite, col, mGrain * 0.70 + 0.30);
-    col *= (0.80 + speck * 0.28);   // speckle brightens local area
+    vec3 col = mix(quartz, feldspar, fGrain * 0.85);
+    col = mix(biotite, col, mGrain * 0.65 + 0.35);
+    col *= (0.78 + speck * 0.30);
 
-    // Crack darkening
+    // Crack darkening at crystal boundaries
     col = mix(crackCol, col, crack1 * crack2);
 
-    // Large-scale color variation (fbm overlay — patch lighting in rock)
-    float macro = gFbm(uv * 0.40);
-    col *= (0.80 + macro * 0.38);
+    // Large-scale brightness variation (surface exposure / shadow pockets)
+    float macro = gFbm(uv * 0.38);
+    col *= (0.76 + macro * 0.42);
 
-    // Moss / vegetation on nearly-flat surfaces at low altitude
-    vec3 moss    = vec3(0.05, 0.11, 0.02);
-    vec3 wetrock = vec3(0.06, 0.07, 0.09); // wet/dark areas in crevices
-    float vegFac = smoothstep(0.55, 0.15, slope) * smoothstep(4.0, -2.0, height);
-    float wetFac = smoothstep(0.10, 0.40, slope) * smoothstep(-1.0, -6.0, height);
-    col = mix(col,  moss,    vegFac * 0.72);
-    col = mix(col,  wetrock, wetFac * 0.45);
+    // Strata banding: horizontal rock layers (no color — only brightness)
+    float strata = sin(height * 1.8 + gFbm(uv * 0.6) * 3.0) * 0.5 + 0.5;
+    col *= (0.88 + strata * 0.18);
 
     return col;
   }
@@ -258,7 +248,7 @@ export class ValleyScene {
 
   constructor(private canvas: HTMLCanvasElement) {
     this.scene    = new THREE.Scene();
-    this.camera   = new THREE.PerspectiveCamera(72, canvas.width/canvas.height, 0.5, 900);
+    this.camera   = new THREE.PerspectiveCamera(58, canvas.width/canvas.height, 0.5, 900);
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:false });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
@@ -281,13 +271,13 @@ export class ValleyScene {
 
   private buildPath(): void {
     this.camPath = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(  0, 55, 120),  // Hero: aerial, full valley panorama
-      new THREE.Vector3( -4, 34,  82),  // Pain: descending, valley walls visible
-      new THREE.Vector3(  2, 18,  44),  // Services: entering valley zone
-      new THREE.Vector3(  0, 10,   8),  // AI: inside the valley
-      new THREE.Vector3(  2,  9, -46),  // Team
-      new THREE.Vector3(0.5, 10, -86),  // Method — approaching panorama
-      new THREE.Vector3(  0, 14,-110),  // Contact — elevated, looking at lake
+      new THREE.Vector3(  0, 88, 140),  // Hero: high aerial — full valley from above
+      new THREE.Vector3( -3, 58,  96),  // Pain: descending, horizon still visible
+      new THREE.Vector3(  2, 28,  52),  // Services: entering valley walls
+      new THREE.Vector3(  0, 12,  10),  // AI: inside valley floor
+      new THREE.Vector3(  2, 10, -44),  // Team
+      new THREE.Vector3(0.5, 11, -82),  // Method — valley opening ahead
+      new THREE.Vector3(  0, 18,-106),  // Contact — elevated lookout over lake
     ], false, 'catmullrom', 0.5);
   }
 
@@ -298,22 +288,23 @@ export class ValleyScene {
     const tang   = this.camPath.getTangent(Math.min(t, 0.998));
     let target   = pos.clone().addScaledVector(tang, 14);
 
-    // At panorama end: blend gaze down toward the lake
-    const pano = Math.max(0, (t - 0.84) / 0.16);
+    // At panorama end: look across the lake, slightly downward
+    const pano = Math.max(0, (t - 0.82) / 0.18);
     if (pano > 0) {
-      const lake = new THREE.Vector3(pos.x + this.mouse.x*3, -0.5, -125);
-      target = target.clone().lerp(lake, pano);
+      // Look toward far end of lake, slightly below horizon
+      const lakeTarget = new THREE.Vector3(pos.x + this.mouse.x*4, 1.5, -145);
+      target = target.clone().lerp(lakeTarget, pano);
     }
 
-    target.x += this.mouse.x * 6.0 * (1 - pano * 0.8);
-    target.y += this.mouse.y * 3.5 * (1 - pano * 0.6);
+    target.x += this.mouse.x * 5.0 * (1 - pano * 0.7);
+    target.y += this.mouse.y * 3.0 * (1 - pano * 0.5);
     this.camera.lookAt(target);
   }
 
   // ── Terrain ────────────────────────────────────────────────────────────────
 
   private buildTerrain(): void {
-    const geo = new THREE.PlaneGeometry(260, 400, 150, 230);
+    const geo = new THREE.PlaneGeometry(300, 460, 160, 260);
     geo.rotateX(-Math.PI / 2);
 
     const pos = geo.attributes['position'] as THREE.BufferAttribute;
