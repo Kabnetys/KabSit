@@ -48,19 +48,6 @@ export default function S1_Hero(): JSX.Element {
     return () => clearInterval(interval);
   }, []);
 
-  // Mouse parallax on circuit background
-  useEffect(() => {
-    const section = sectionRef.current;
-    if (!section) return;
-    const handleMouseMove = (e: MouseEvent) => {
-      const { innerWidth, innerHeight } = window;
-      const x = (e.clientX / innerWidth - 0.5) * 18;
-      const y = (e.clientY / innerHeight - 0.5) * 18;
-      gsap.to('#webgl-canvas', { x, y, duration: 1.2, ease: 'power2.out' });
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
 
   return (
     <section

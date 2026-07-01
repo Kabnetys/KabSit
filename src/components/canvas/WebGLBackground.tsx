@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { CircuitScene } from './CircuitScene';
+import { ValleyScene } from './ValleyScene';
 
 export default function WebGLBackground(): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -11,28 +11,21 @@ export default function WebGLBackground(): JSX.Element {
     if (!canvas) return;
 
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const scene = new CircuitScene(canvas);
+    const scene = new ValleyScene(canvas);
     scene.setSize(window.innerWidth, window.innerHeight);
 
-    if (!prefersReduced) {
-      scene.start();
-    }
+    if (!prefersReduced) scene.start();
 
     const handleResize = (): void => scene.setSize(window.innerWidth, window.innerHeight);
-    const handleMouse = (e: MouseEvent): void => scene.onMouseMove(e.clientX, e.clientY);
-
+    const handleMouse  = (e: MouseEvent): void => scene.onMouseMove(e.clientX, e.clientY);
     const handleScroll = (): void => {
-      const scrollY = window.scrollY;
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = maxScroll > 0 ? scrollY / maxScroll : 0;
-      scene.setScroll(progress);
+      scene.setScroll(maxScroll > 0 ? window.scrollY / maxScroll : 0);
     };
 
     window.addEventListener('resize', handleResize);
     window.addEventListener('mousemove', handleMouse);
     window.addEventListener('scroll', handleScroll, { passive: true });
-
-    // Initialize with current scroll position (e.g. on page refresh mid-scroll)
     handleScroll();
 
     return () => {
