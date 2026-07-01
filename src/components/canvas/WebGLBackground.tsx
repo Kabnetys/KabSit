@@ -21,19 +21,32 @@ export default function WebGLBackground(): JSX.Element {
     const handleResize = (): void => scene.setSize(window.innerWidth, window.innerHeight);
     const handleMouse = (e: MouseEvent): void => scene.onMouseMove(e.clientX, e.clientY);
 
+    const handleScroll = (): void => {
+      const scrollY = window.scrollY;
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = maxScroll > 0 ? scrollY / maxScroll : 0;
+      scene.setScroll(progress);
+    };
+
     window.addEventListener('resize', handleResize);
     window.addEventListener('mousemove', handleMouse);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    // Initialize with current scroll position (e.g. on page refresh mid-scroll)
+    handleScroll();
 
     return () => {
       scene.dispose();
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('mousemove', handleMouse);
+      window.removeEventListener('scroll', handleScroll);
     };
   }, []);
 
   return (
     <canvas
       ref={canvasRef}
+      id="webgl-canvas"
       className="fixed inset-0 w-full h-full"
       style={{ zIndex: 0 }}
       aria-hidden="true"
