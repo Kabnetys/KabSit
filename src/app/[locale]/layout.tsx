@@ -93,6 +93,15 @@ export default async function LocaleLayout({
         />
         <NextIntlClientProvider locale={locale} messages={messages} timeZone="Europe/Paris" now={new Date()}>
           <WebGLBackground />
+          <div
+            className="fixed inset-0 pointer-events-none"
+            style={{
+              zIndex: 0,
+              background:
+                'radial-gradient(ellipse at 50% 45%, rgba(4,8,28,0.25) 0%, rgba(4,8,28,0.6) 65%, rgba(4,8,28,0.9) 100%)',
+            }}
+            aria-hidden="true"
+          />
           <NavBar />
           <main id="main-content" className="relative" style={{ zIndex: 1 }}>
             {children}

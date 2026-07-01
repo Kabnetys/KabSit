@@ -24,8 +24,8 @@ export class AppMockupScene {
 
   private buildMockup(): void {
     const frameMat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(0x0a1245),
-      emissive: new THREE.Color(0x0066ff),
+      color: new THREE.Color(0x0b1130),
+      emissive: new THREE.Color(0x3d7cff),
       emissiveIntensity: 0.08,
       roughness: 0.2,
       metalness: 0.8,
@@ -33,12 +33,12 @@ export class AppMockupScene {
     const frame = new THREE.Mesh(new THREE.BoxGeometry(4, 2.8, 0.05), frameMat);
     this.group.add(frame);
 
-    const screenMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x050b2e), roughness: 0.9 });
+    const screenMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x04081c), roughness: 0.9 });
     const screen = new THREE.Mesh(new THREE.BoxGeometry(3.8, 2.5, 0.02), screenMat);
     screen.position.set(0, -0.05, 0.04);
     this.group.add(screen);
 
-    const barMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x0a1a5e) });
+    const barMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x141a3a) });
     const bar = new THREE.Mesh(new THREE.BoxGeometry(3.8, 0.2, 0.02), barMat);
     bar.position.set(0, 1.15, 0.05);
     this.group.add(bar);
@@ -55,26 +55,26 @@ export class AppMockupScene {
 
     for (let r = 0; r < 6; r++) {
       const w = 2.2 + Math.random() * 0.8;
-      const lineMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x0066ff), opacity: 0.12 + Math.random() * 0.1, transparent: true });
+      const lineMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(0x3d7cff), opacity: 0.12 + Math.random() * 0.1, transparent: true });
       const line = new THREE.Mesh(new THREE.BoxGeometry(w, 0.06, 0.01), lineMat);
       line.position.set(-0.1 - (3 - w) / 2, 0.85 - r * 0.32, 0.07);
       this.group.add(line);
       if (r < 3) {
         const badge = new THREE.Mesh(
           new THREE.BoxGeometry(0.35, 0.14, 0.01),
-          new THREE.MeshStandardMaterial({ color: new THREE.Color(r === 0 ? 0x00cc55 : r === 1 ? 0xffaa00 : 0x0066ff), transparent: true, opacity: 0.7 })
+          new THREE.MeshStandardMaterial({ color: new THREE.Color(r === 0 ? 0x00cc55 : r === 1 ? 0xffaa00 : 0x3d7cff), transparent: true, opacity: 0.7 })
         );
         badge.position.set(1.6, 0.85 - r * 0.32, 0.07);
         this.group.add(badge);
       }
     }
 
-    const wireframeMat = new THREE.LineBasicMaterial({ color: 0x00ccff, transparent: true, opacity: 0.35 });
+    const wireframeMat = new THREE.LineBasicMaterial({ color: 0x3d7cff, transparent: true, opacity: 0.35 });
     const edges = new THREE.EdgesGeometry(new THREE.BoxGeometry(4.05, 2.85, 0.08));
     this.group.add(new THREE.LineSegments(edges, wireframeMat));
 
     this.scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-    const pointLight = new THREE.PointLight(0x00ccff, 2, 12);
+    const pointLight = new THREE.PointLight(0x3d7cff, 2, 12);
     pointLight.position.set(3, 3, 3);
     this.scene.add(pointLight);
   }

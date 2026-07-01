@@ -52,7 +52,7 @@ export default function SectionServices(): JSX.Element {
               <FadeIn key={i} delay={i * 0.12}>
               <article
                 className="group relative p-8 rounded-2xl border border-white/10 hover:border-blue/50 transition-all duration-500 hover:shadow-[0_0_40px_rgba(0,102,255,0.15)]"
-                style={{ backgroundColor: 'rgba(10,18,69,0.6)', backdropFilter: 'blur(12px)' }}
+                style={{ backgroundColor: 'rgba(18,24,56,0.6)', backdropFilter: 'blur(12px)' }}
               >
                 <div className="text-cyan mb-6 transition-transform duration-300 group-hover:scale-110">
                   <Icon />

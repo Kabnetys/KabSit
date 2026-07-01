@@ -1,13 +1,14 @@
 :root {
-  --color-navy: #050B2E;
-  --color-navy-mid: #0A1245;
-  --color-blue: #0066FF;
-  --color-cyan: #00CCFF;
-  --color-white: #FFFFFF;
-  --color-white-60: rgba(255, 255, 255, 0.6);
-  --color-white-20: rgba(255, 255, 255, 0.2);
-  --color-glow-blue: rgba(0, 102, 255, 0.3);
-  --color-glow-cyan: rgba(0, 204, 255, 0.25);
+  --color-navy: #04081C;
+  --color-navy-mid: #0B1130;
+  --color-blue: #3D7CFF;
+  --color-cyan: #3D7CFF;
+  --color-white: #E4E9FF;
+  --color-white-60: rgba(228, 233, 255, 0.6);
+  --color-white-20: rgba(228, 233, 255, 0.2);
+  --color-glow-blue: rgba(61, 124, 255, 0.3);
+  --color-glow-cyan: rgba(61, 124, 255, 0.25);
+  --color-surface: rgba(18, 24, 56, 0.55);
 
   --font-display: 'Space Grotesk', sans-serif;
   --font-body: 'Inter', sans-serif;

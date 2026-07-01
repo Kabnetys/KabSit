@@ -8,7 +8,7 @@ export default function Footer(): JSX.Element {
   return (
     <footer
       className="relative border-t"
-      style={{ borderColor: 'rgba(0,102,255,0.2)', backgroundColor: 'rgba(5,11,46,0.97)', zIndex: 10, padding: '48px 32px 32px' }}
+      style={{ borderColor: 'rgba(61,124,255,0.2)', backgroundColor: 'rgba(4,8,28,0.97)', zIndex: 10, padding: '48px 32px 32px' }}
     >
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start gap-8">
         <div>

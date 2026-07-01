@@ -5,10 +5,11 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        navy: '#050B2E',
-        'navy-mid': '#0A1245',
-        blue: '#0066FF',
-        cyan: '#00CCFF',
+        navy: '#04081C',
+        'navy-mid': '#0B1130',
+        blue: '#3D7CFF',
+        cyan: '#3D7CFF',
+        white: '#E4E9FF',
       },
       fontFamily: {
         display: ['Space Grotesk', 'sans-serif'],

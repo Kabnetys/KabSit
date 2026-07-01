@@ -44,8 +44,8 @@ export default function NavBar(): JSX.Element {
         style={{
           zIndex: 50,
           backdropFilter: 'blur(12px)',
-          backgroundColor: scrolled ? 'rgba(5,11,46,0.92)' : 'rgba(5,11,46,0.75)',
-          borderBottom: '1px solid rgba(0,102,255,0.2)',
+          backgroundColor: scrolled ? 'rgba(4,8,28,0.92)' : 'rgba(4,8,28,0.75)',
+          borderBottom: '1px solid rgba(61,124,255,0.2)',
         }}
       >
         <Link href={`${prefix}/`} aria-label="KabNetys — Accueil" onClick={closeMenu}>
@@ -104,7 +104,7 @@ export default function NavBar(): JSX.Element {
         style={{
           zIndex: 49,
           backdropFilter: 'blur(16px)',
-          backgroundColor: 'rgba(5,11,46,0.97)',
+          backgroundColor: 'rgba(4,8,28,0.97)',
           opacity: menuOpen ? 1 : 0,
           pointerEvents: menuOpen ? 'auto' : 'none',
           transform: menuOpen ? 'translateY(0)' : 'translateY(-8px)',

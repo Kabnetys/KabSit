@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { CircuitScene } from './CircuitScene';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { JourneyScene } from './JourneyScene';
 
 export default function WebGLBackground(): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -10,21 +12,36 @@ export default function WebGLBackground(): JSX.Element {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const scene = new CircuitScene(canvas);
+    gsap.registerPlugin(ScrollTrigger);
+
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const lightweight = window.matchMedia('(max-width: 768px)').matches;
+
+    const scene = new JourneyScene(canvas, { reducedMotion, lightweight });
     scene.setSize(window.innerWidth, window.innerHeight);
 
-    if (!prefersReduced) {
+    if (!reducedMotion) {
       scene.start();
     }
 
-    const handleResize = (): void => scene.setSize(window.innerWidth, window.innerHeight);
+    const trigger = ScrollTrigger.create({
+      trigger: document.body,
+      start: 'top top',
+      end: 'bottom bottom',
+      onUpdate: (self) => scene.setProgress(self.progress),
+    });
+
+    const handleResize = (): void => {
+      scene.setSize(window.innerWidth, window.innerHeight);
+      ScrollTrigger.refresh();
+    };
     const handleMouse = (e: MouseEvent): void => scene.onMouseMove(e.clientX, e.clientY);
 
     window.addEventListener('resize', handleResize);
     window.addEventListener('mousemove', handleMouse);
 
     return () => {
+      trigger.kill();
       scene.dispose();
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('mousemove', handleMouse);

@@ -30,7 +30,7 @@ export default function SectionTeam(): JSX.Element {
             <FadeIn key={i} delay={i * 0.15}>
             <article
               className="group p-8 rounded-2xl border border-white/10 hover:border-blue/40 transition-all duration-500"
-              style={{ backgroundColor: 'rgba(10,18,69,0.5)', backdropFilter: 'blur(12px)' }}
+              style={{ backgroundColor: 'rgba(18,24,56,0.5)', backdropFilter: 'blur(12px)' }}
             >
               <div className="flex items-start gap-6 mb-6">
                 <div className="relative w-20 h-20 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-blue/40 group-hover:ring-cyan/60 transition-all duration-300">
