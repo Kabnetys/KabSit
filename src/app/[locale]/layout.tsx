@@ -2,12 +2,8 @@ import type { Metadata } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
 import { unstable_setRequestLocale } from 'next-intl/server';
 import { Space_Grotesk, Inter, JetBrains_Mono } from 'next/font/google';
-import dynamicImport from 'next/dynamic';
 import Script from 'next/script';
 import { notFound } from 'next/navigation';
-import NavBar from '@/components/ui/NavBar';
-import Footer from '@/components/layout/Footer';
-import SmoothScroll from '@/components/ui/SmoothScroll';
 import '@/app/globals.css';
 
 const LOCALES = ['fr', 'en', 'es'];
@@ -17,8 +13,6 @@ async function loadMessages(locale: string): Promise<any> {
   if (!LOCALES.includes(locale)) notFound();
   return (await import(`../../messages/${locale}.json`)).default;
 }
-
-const WebGLBackground = dynamicImport(() => import('@/components/canvas/WebGLBackground'), { ssr: false });
 
 const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-display-loaded' });
 const inter = Inter({ subsets: ['latin'], variable: '--font-body-loaded' });
@@ -93,12 +87,7 @@ export default async function LocaleLayout({
           strategy="afterInteractive"
         />
         <NextIntlClientProvider locale={locale} messages={messages} timeZone="Europe/Paris" now={new Date()}>
-          <WebGLBackground />
-          <SmoothScroll>
-            <main id="main-content" className="relative" style={{ zIndex: 1 }}>
-              {children}
-            </main>
-          </SmoothScroll>
+          {children}
         </NextIntlClientProvider>
       </body>
     </html>
